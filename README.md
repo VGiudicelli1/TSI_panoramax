@@ -18,3 +18,34 @@ Our objectives are the last part of this project. We try to localize road signs 
 - TSI
 - final project
 - 5 full-time weeks
+
+## Useful links
+
+Jeu de données de panneaux publié sur data.gouv.fr:
+https://www.data.gouv.fr/fr/datasets/export-de-test-de-panneaux-detecte-dans-les-photos-de-panoramax/
+ 
+API pour récupérer une photo avec son ID:
+https://api.panoramax.xyz/api/pictures/<id>/hd.jpg 
+
+Pour se renseigner - beta.gouv: 
+https://beta.gouv.fr/
+
+Sur la fabrique des géocommuns: 
+https://www.ign.fr/institut/la-fabrique-des-geocommuns-incubateur-de-communs-lign
+
+OSM:
+- https://www.openstreetmap.fr/
+
+Pour mieux connaitre Panoramax:
+- https://panoramax.fr/
+- https://forum.geocommuns.fr/
+
+Pour découvrir le code:
+- https://gitlab.com/geovisio
+
+Pour avancer sur la création de la base:
+- https://github.com/IGNF/pano/
+
+Pour tester la détection d'objet:
+- https://github.com/panoramax-project/DetectionTutorial
+
