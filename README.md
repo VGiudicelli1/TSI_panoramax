@@ -23,6 +23,15 @@ Our objectives are the last part of this project. We try to localize road signs 
 
 Jeu de données de panneaux publié sur data.gouv.fr:
 https://www.data.gouv.fr/fr/datasets/export-de-test-de-panneaux-detecte-dans-les-photos-de-panoramax/
+
+Modèle de données pour les panneaux de signalisation routière:
+https://github.com/IGNF/Pano
+
+Export de test de panneaux détecté dans les photos de Panoramax:
+https://www.data.gouv.fr/fr/datasets/export-de-test-de-panneaux-detecte-dans-les-photos-de-panoramax/
+
+Modèles de panneaux de signalisation routière en France:
+https://fr.wikipedia.org/wiki/Panneau_de_signalisation_routière_en_France
  
 API pour récupérer une photo avec son ID:
 https://api.panoramax.xyz/api/pictures/<id>/hd.jpg 
