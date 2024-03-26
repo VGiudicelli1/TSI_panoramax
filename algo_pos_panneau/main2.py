@@ -16,8 +16,6 @@ calculs des estimations:
     posSource
     dirSource
     fovSource
-    widthSource
-
     gisement
     distance
     
@@ -33,23 +31,6 @@ dataset = "./data_test/cropped_signs"
 photos = pd.read_csv(dataset + "/photo.csv")
 imagettes = pd.read_csv(dataset + "/imagette.csv")
 
-imagettes = imagettes.join(photos.set_index("id"), on="source")
-
-# add width and height
-imagettes["source_width"] = 0
-imagettes["source_height"] = 0
-
-for key in imagettes.index:
-    img = Image.open(dataset + "/photo/" + imagettes.loc[key].source + ".jpg")
-    imagettes.source_width[key] = img.width
-    imagettes.source_height[key] = img.height
-
-imagettes["gisement"] = (imagettes.x / imagettes.source_width - 0.5) * imagettes.fov + imagettes.azimut
-
-print(imagettes)
-
-
-"""
 def loadImage(id):
     return Image.open(dataset + "/photo/" + id + ".jpg")
 
@@ -100,9 +81,6 @@ def makeQueryInsert(line):
     source = result["source"]
     code = result["code"]
     return f"INSERT INTO panneau_detection (id, source, code, geom) VALUES ('{id}', '{source}', '{code}', ST_GeomFromText('{lineString}'));"
-
-"""
-
 
 """
 print(makeQueryInsert(2))
