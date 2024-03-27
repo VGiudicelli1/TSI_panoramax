@@ -59,8 +59,8 @@ def comparaison(listImg):
 
 if __name__ == '__main__':
 	
-	path = '/home/formation/Documents/TSIGirardinClaire/Projet/TSI_panoramax/data_test/cropped_signs/'
-	listImg = ['A3_tlse_2.png', 'A3_tlse_2bis.png', 'B14_tlse_1.png','B14_tlse_1bis.png', 'B14_tlse_2.png', 'B14_tlse_2bis.png']
+	path = '../data_test/cropped_signs/panneau/'
+	listImg = ['1-A3-tlse.png', '2-A3-tlse.png', '3-B14-tlse.png','4-B14-tlse.png', '5-B14-tlse.png', '6-B14-tlse.png']
 	# Charger les images
 	images = []
 	for nameImg in listImg:
