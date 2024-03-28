@@ -1,0 +1,10 @@
+lyon_1_1;4.84372;45.7482;https://api.panoramax.xyz/api/collections/6a5ceaa9-981b-4348-a686-cd4a8119f421/items/c4e04338-0216-49b4-b271-bd1a44e82f36
+lyon_1_2;4.84368;45.74823;https://api.panoramax.xyz/api/collections/6a5ceaa9-981b-4348-a686-cd4a8119f421/items/7817101d-27ae-41ec-9192-6c7718a7c04e
+lyon_1_3;4.84366;45.74824;https://api.panoramax.xyz/api/collections/6a5ceaa9-981b-4348-a686-cd4a8119f421/items/5dfdbe50-e8d3-4c54-b156-32ea8a0bba96
+lyon_2_1;4.83;45.77757;https://api.panoramax.xyz/api/collections/35a000c6-3b94-44f3-b98d-20dd6070a219/items/6bd03031-3388-4473-9682-18b040eaa7b8
+lyon_2_2;4.83;45.77759;https://api.panoramax.xyz/api/collections/35a000c6-3b94-44f3-b98d-20dd6070a219/items/a7ff5e81-0d27-4477-897a-7ab60a15300d
+lyon_2_3;4.82995;45.77773;https://api.panoramax.xyz/api/collections/35a000c6-3b94-44f3-b98d-20dd6070a219/items/2226bd1a-2c52-4c23-bed4-d69e3a5bd784
+lyon_2_4;4.8299445.77775;https://api.panoramax.xyz/api/collections/35a000c6-3b94-44f3-b98d-20dd6070a219/items/86e6e5c5-1d68-48d9-a72b-38c56ba445fb
+lyon_3_1;4.81813;45.77956;https://api.panoramax.xyz/api/collections/b43c29ba-25a8-42d9-823b-7aba934e2c4a/items/0cbb0604-8517-4b72-9f9f-3e9c8eb4e550
+lyon_3_2;4.81819;45.77953;https://api.panoramax.xyz/api/collections/b43c29ba-25a8-42d9-823b-7aba934e2c4a/items/8a4c620a-ac09-48b0-a419-e0c7ecafbdb1
+lyon_3_3;4.81829;45.7795;https://api.panoramax.xyz/api/collections/b43c29ba-25a8-42d9-823b-7aba934e2c4a/items/5b3c6e8a-fa95-4433-a474-801c4eea2403
