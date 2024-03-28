@@ -49,22 +49,54 @@ photos["fov_rad"] = photos.fov * math.pi / 180
 
 # proj Lambert93
 
-x, y = proj_geo_to_lambert.transform(photos.lat, photos.lng)
-photos["x"] = x
-photos["y"] = y
+E, N = proj_geo_to_lambert.transform(photos.lat, photos.lng)
+DELTA_E = np.mean(E)
+DELTA_N = np.mean(N)
+photos["E"] = E - DELTA_E
+photos["N"] = N - DELTA_N
 
 # join
 imagettes = imagettes.join(photos.set_index("id").add_prefix("source_"), on="source")
 
-# compute coords panneau
-
+# compute gisement
 imagettes["gisement"] = ((imagettes.x / imagettes.source_width - 0.5) * imagettes.source_fov + imagettes.source_azimut) * math.pi / 180
-imagettes["x_reel"] = 50 * np.cos(imagettes.gisement) + imagettes.source_x
-imagettes["y_reel"] = 50 * np.sin(imagettes.gisement) + imagettes.source_y
+
+# compute new coords
+
+if False: # with arbitraire size
+    # compute angle hauteur dz_rad
+    imagettes["size_dist_factor"] = imagettes.source_height / imagettes.dz / math.pi
+    # dist = size_dist_factor * size
+
+    # propag
+    imagettes["dE"] = imagettes.size_dist_factor * np.sin(imagettes.gisement)
+    imagettes["dN"] = imagettes.size_dist_factor * np.cos(imagettes.gisement)
+    imagettes["E_reel"] = 0.8 * imagettes.dE + imagettes.source_E
+
+    imagettes["N_reel"] = 0.8 * imagettes.dN + imagettes.source_N
+else:
+    # MC with appareillment of panneaux
+    """
+    1-2-7-9
+    3-4
+    5-6-8-10
+    """
+    """
+    B = Es, Ns, gisement, dz
+    X = Ep,Np,s
+    """
+    nb_obs = len(imagettes)
+    B = np.zeros((nb_obs * 4,1))
+    B[0::4, 0] = imagettes.source_E
+    B[1::4, 0] = imagettes.source_N
+    B[2::4, 0] = imagettes.gisement
+    B[3::4, 0] = imagettes.dz
+    print(B)
+    pass
 
 # unproj Lambert93
 
-lat, lng = proj_lambert_to_geo.transform(imagettes.x_reel, imagettes.y_reel)
+lat, lng = proj_lambert_to_geo.transform(imagettes.E_reel, imagettes.N_reel)
 imagettes["lat_reel"] = lat
 imagettes["lng_reel"] = lng
 
@@ -89,16 +121,24 @@ def makeMarkerPhoto(azimut=0, fov=math.pi/2):
 
 for key in photos.index:
     photo = photos.loc[key]
-    plt.plot(photo.x, photo.y, marker=makeMarkerPhoto(photo.azimut_rad, photo.fov_rad), markersize=50)
-    plt.text(photo.x, photo.y, str(photo.id)[:5]+"...")
+    plt.plot(photo.E, photo.N, marker=makeMarkerPhoto(photo.azimut_rad, photo.fov_rad), markersize=50)
+    plt.text(photo.E, photo.N, str(photo.id)[:5]+"...")
+
+def display_img(imgs):
+    print(imgs)
+    plt.plot(
+        list(zip(*zip(imgs.E_reel, imgs.source_E))),
+        list(zip(*zip(imgs.N_reel, imgs.source_N))),
+        marker="x", lw=1)
+
+    for key in imgs.index:
+        img = imgs.loc[key]
+        #plt.plot([img.x_reel, img.source_x], [img.y_reel, img.source_y], marker="x")
+        plt.text(img.E_reel, img.N_reel, str(img.code))
 
 
-print(imagettes)
-plt.plot(
-    list(zip(*zip(imagettes.x_reel, imagettes.source_x))),
-    list(zip(*zip(imagettes.y_reel, imagettes.source_y))),
-    marker="x", lw=1)
-
+#display_img(imagettes[imagettes.code == "B14"])
+display_img(imagettes)
 plt.axis("equal")
 plt.show()
 
