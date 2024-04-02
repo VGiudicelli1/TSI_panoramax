@@ -1,3 +1,7 @@
+-- free database
+-- DROP TABLE IF EXISTS sequence, photo, imagette, panneau;
+
+
 -- use postgis to manipule geometries
 CREATE EXTENSION IF NOT EXISTS postgis;
 
@@ -9,10 +13,15 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE TABLE public.sequence
 (
 	id CHARACTER VARYING(256) NOT NULL,
-	`date` DATE NOT NULL,
+	"date" DATE NOT NULL,
 	
 	PRIMARY KEY (id)
 );
+
+
+ALTER TABLE public.sequence
+	OWNER to postgres;
+
 
 CREATE TABLE public.photo
 (
@@ -39,7 +48,7 @@ CREATE TABLE public.panneau
 (
 	id SERIAL NOT NULL,
 	geom GEOMETRY(POINT, 4326) NOT NULL,
-	`size` FLOAT NOT NULL,
+	"size" FLOAT NOT NULL,
 	orientation FLOAT NOT NULL, 
 	precision FLOAT NOT NULL,
 	
@@ -54,7 +63,7 @@ CREATE TABLE public.imagette
 (
 	id CHARACTER VARYING(256) NOT NULL,
 	id_photo CHARACTER VARYING NOT NULL,
-	id_panneau CHARACTER VARYING DEFAULT NULL,
+	id_panneau INTEGER DEFAULT NULL,
 	x FLOAT NOT NULL,
 	y FLOAT NOT NULL,
 	dz FLOAT NOT NULL,
