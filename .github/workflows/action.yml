@@ -8,20 +8,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        
       - name: Test echo
         run: echo "Coucou la team Panoramax !"
-  job_API:
+  job_python:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-  job_contour:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-  job_photogrammetrie:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+        
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10.11'
+      
+      - name: Installation Dépendances
+        run: python -m pip install --upgrade pip
+        run: pip install -r requirements.txt
+
