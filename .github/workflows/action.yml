@@ -7,4 +7,4 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Test Bidon
-        run: if [ 1 -eq 1 ]; then print ("C'est tout bon")
+        run: if [ 1 -eq 1 ]; then echo ("C'est tout bon")
