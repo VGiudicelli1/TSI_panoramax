@@ -1,0 +1,38 @@
+services:
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    restart: always
+    # set shared memory limit
+    shm_size: 128mb
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: tsi23lesboss		# Oui, ce mot de passe est en clair dans le git, mais ne vous inquiétez pas, on ne l'a pas réutilisé autre part (sauf sur http://moncomptebanquaire.com et http://mesidentifiant.net, mais on vous fait confiance pour ne pas essayer)
+    ports:
+      - 5432:5432	
+    networks:
+      - database_net
+    volumes:
+      - ./init_postgres:/docker-entrypoint-initdb.d:ro
+      - postgres_data:/var/lib/postgresql/data:rw
+  
+  # for developpement only ! remove on production
+  pgAdmin:
+    image: dpage/pgadmin4:8.4
+    networks:
+      - database_net
+    ports:
+      - 5050:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=tsi23@ensg.eu		# LOGIN
+      - PGADMIN_DEFAULT_PASSWORD=tsi23lesboss		# LOGIN  # là aussi on n'a pas réutilisé le même mot de passe (ah si ?)
+    volumes:
+      - ./pgadmin4/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      - postgres
+
+networks:
+  database_net:
+
+volumes:
+  postgres_data:
