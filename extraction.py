@@ -26,5 +26,3 @@ def get_whxy_from_img_path(image_path):
     else:
         print('Pas de comm jpeg')
         return None
-
-print(get_whxy_from_img_path('/home/formation/Documents/bd_panneaux/test_crops_strasbourg/B14-50/0a5cc80d3de5d7bb2518677f6b305ebcc46a68fb9028a57947494243ebd3ff9e.jpg'))
