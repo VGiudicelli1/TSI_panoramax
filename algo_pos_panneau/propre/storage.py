@@ -20,3 +20,4 @@ def init():
 def load():
     global imagette, panneau, photo, sequence
     
+init()
