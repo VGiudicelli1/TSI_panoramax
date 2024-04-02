@@ -12,16 +12,16 @@ jobs:
         run: echo "Coucou la team Panoramax !"
   job_API:
     runs-on: ubuntu-22.04
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v3
+     steps:
+       - name: Checkout
+         uses: actions/checkout@v3
   job_contour:
     runs-on: ubuntu-22.04
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v3
+     steps:
+       - name: Checkout
+         uses: actions/checkout@v3
   job_photogrammetrie:
     runs-on: ubuntu-22.04
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v3
+     steps:
+       - name: Checkout
+         uses: actions/checkout@v3
