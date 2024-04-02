@@ -3,8 +3,13 @@ on:
   - push
   - pull_request
 jobs:
-  job_1:
+  job_test:
     runs-on: ubuntu-22.04
     steps:
-      - name: Test Bidon
-        run: if [ 1 -eq 1 ]; then echo ("C'est tout bon")
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Test echo
+        run: echo "Coucou la team Panoramax !"
+  job_API:
+  job_contour:
+  job_photogrammetrie:
