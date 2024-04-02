@@ -30,6 +30,7 @@ print("begin\n\n\n")
 proj_geo_to_lambert = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:2154")
 proj_lambert_to_geo = pyproj.Transformer.from_crs("EPSG:2154", "EPSG:4326")
 
+print("load data...")
 # load data
 dataset = "../data_test/cropped_signs"
 photos = pd.read_csv(dataset + "/photo.csv")
@@ -43,12 +44,12 @@ for key in photos.index:
     img = Image.open(dataset + "/photo/" + photos.loc[key].id + ".jpg")
     photos.loc[key, ("width", "height")] = (img.width, img.height)
 
+print("init data...")
 # turn angle from deg to rad
 photos["azimut_rad"] = photos.azimut * math.pi / 180
 photos["fov_rad"] = photos.fov * math.pi / 180
 
 # proj Lambert93
-
 E, N = proj_geo_to_lambert.transform(photos.lat, photos.lng)
 DELTA_E = np.mean(E)
 DELTA_N = np.mean(N)
@@ -58,41 +59,139 @@ photos["N"] = N - DELTA_N
 # join
 imagettes = imagettes.join(photos.set_index("id").add_prefix("source_"), on="source")
 
+# compute angle hauteur dz_rad
+imagettes["size_dist_factor"] = imagettes.source_height / imagettes.dz / math.pi
+# dist = size_dist_factor * size
+
 # compute gisement
 imagettes["gisement"] = ((imagettes.x / imagettes.source_width - 0.5) * imagettes.source_fov + imagettes.source_azimut) * math.pi / 180
 
-# compute new coords
+print("compute position...")
+# propag
+imagettes["E_estim"] = 0.8 * imagettes.size_dist_factor * np.sin(imagettes.gisement) + imagettes.source_E
+imagettes["N_estim"] = 0.8 * imagettes.size_dist_factor * np.cos(imagettes.gisement) + imagettes.source_N
 
-if False: # with arbitraire size
-    # compute angle hauteur dz_rad
-    imagettes["size_dist_factor"] = imagettes.source_height / imagettes.dz / math.pi
-    # dist = size_dist_factor * size
+# MC with appareillment of panneaux
+"""
+1-2-7-9
+3-4
+5-6-8-10
+"""
+"""
+B = Es, Ns, gisement, size_dist_factor
+X = Ep,Np,s
+"""
 
-    # propag
-    imagettes["dE"] = imagettes.size_dist_factor * np.sin(imagettes.gisement)
-    imagettes["dN"] = imagettes.size_dist_factor * np.cos(imagettes.gisement)
-    imagettes["E_reel"] = 0.8 * imagettes.dE + imagettes.source_E
+appareillement = [
+    [0,1,6,8],
+    [4,5,7,9],
+    [2, 3]
+]
+nb_pan = len(appareillement)
+nb_img = len(imagettes)
 
-    imagettes["N_reel"] = 0.8 * imagettes.dN + imagettes.source_N
-else:
-    # MC with appareillment of panneaux
-    """
-    1-2-7-9
-    3-4
-    5-6-8-10
-    """
-    """
-    B = Es, Ns, gisement, dz
-    X = Ep,Np,s
-    """
-    nb_obs = len(imagettes)
-    B = np.zeros((nb_obs * 4,1))
-    B[0::4, 0] = imagettes.source_E
-    B[1::4, 0] = imagettes.source_N
-    B[2::4, 0] = imagettes.gisement
-    B[3::4, 0] = imagettes.dz
-    print(B)
-    pass
+B = np.zeros((nb_img * 4,1))
+B[0::4, 0] = imagettes.source_E
+B[1::4, 0] = imagettes.source_N
+B[2::4, 0] = imagettes.gisement
+B[3::4, 0] = imagettes.size_dist_factor
+#print(B)
+
+X = np.zeros((nb_pan * 3, 1))
+X[0::3, 0] = 0  # pos E
+X[1::3, 0] = 0  # pos N
+X[2::3, 0] = 1  # taille du panneau en mètres
+for i in range(len(appareillement)):
+    X[3*i  , 0] = np.mean(imagettes.loc[appareillement[i]].E_estim)
+    X[3*i+1, 0] = np.mean(imagettes.loc[appareillement[i]].N_estim)
+#print(X)
+
+def makedA():
+    dA = np.zeros((nb_img*4, nb_pan*3))
+    for i_pan in range(len(appareillement)):
+        for i_img in appareillement[i_pan]:
+
+            x = imagettes.loc[i_img].source_E - X[i_pan*3+0]
+            y = imagettes.loc[i_img].source_N - X[i_pan*3+1]
+            dist2 = x**2+y**2
+            dist = dist2**.5
+            fds = imagettes.loc[i_img].size_dist_factor
+            gisement = imagettes.loc[i_img].gisement
+            size = X[i_pan*3+2]
+
+            dA[4*i_img+0, 3*i_pan+0] = 1                            # d sourceE / d posE
+            dA[4*i_img+0, 3*i_pan+1] = 0                            # d sourceE / d posN
+            dA[4*i_img+0, 3*i_pan+2] = -fds * math.sin(gisement)    # d sourceE / d size
+
+            dA[4*i_img+1, 3*i_pan+0] = 0                            # d sourceN / d posE
+            dA[4*i_img+1, 3*i_pan+1] = 1                            # d sourceN / d posN
+            dA[4*i_img+1, 3*i_pan+2] = -fds * math.cos(gisement)    # d sourceN / d size
+
+            dA[4*i_img+2, 3*i_pan+0] = -y/dist2                     # d gisement / d posE
+            dA[4*i_img+2, 3*i_pan+1] = x/dist2                      # d gisement / d posN
+            dA[4*i_img+2, 3*i_pan+2] = 0                            # d gisement / d size
+
+            dA[4*i_img+3, 3*i_pan+0] = 1 / size / math.sin(gisement)# d size_dist_factor / d posE
+            dA[4*i_img+3, 3*i_pan+1] = 1 / size / math.cos(gisement)# d size_dist_factor / d posN
+            dA[4*i_img+3, 3*i_pan+2] = 1 / dist                     # d size_dist_factor / d size
+    return dA
+
+def makeBact():
+    B = np.zeros((nb_img*4, 1))
+    for i_pan in range(len(appareillement)):
+        for i_img in appareillement[i_pan]:
+            x = X[i_pan*3+0] - imagettes.loc[i_img].source_E
+            y = X[i_pan*3+1] - imagettes.loc[i_img].source_N
+            dist2 = x**2+y**2
+            dist = dist2**.5
+            fsd = imagettes.loc[i_img].size_dist_factor
+            gisement_act = math.atan2(y, x)
+            size = X[i_pan*3+2]
+            gisement_mes = imagettes.loc[i_img].gisement
+
+
+            B[4*i_img+0, 0] = X[i_pan*3+0] - size * fsd * math.sin(gisement_mes)
+            B[4*i_img+1, 0] = X[i_pan*3+1] - size * fsd * math.cos(gisement_mes)
+            B[4*i_img+2, 0] = gisement_act
+            B[4*i_img+3, 0] = dist / size
+            
+    return B
+
+for i in range(100):
+    dA = makedA()
+    
+    dB = makeBact() - B
+
+    dX = np.linalg.lstsq(dA, dB , rcond=None)[0]
+
+    norm_dX = np.linalg.norm(dX)
+    norm_dB = np.linalg.norm(dB)
+
+    #print(f"norm dB {norm_dB}\tnorm dX {norm_dX}")
+
+    X -= dX
+
+    if norm_dX < 1e-10:
+        print(f"converge: {i}")
+        print(dB)
+        print(norm_dB)
+        break
+
+print(np.linalg.norm(dB[0::4])/nb_img)
+print(np.linalg.norm(dB[1::4])/nb_img)
+print(np.linalg.norm(dB[2::4])/nb_img)
+print(np.linalg.norm(dB[3::4])/nb_img)
+
+imagettes["E_reel"] = 0
+imagettes["N_reel"] = 0
+
+
+panneaux = { i: {"imagettes":list(imagettes.loc[appareillement[i]].source)} for i in range(len(appareillement)) }
+
+for i_pan in range(len(appareillement)):
+    for i_img in appareillement[i_pan]:
+        imagettes.loc[i_img, ("E_reel", "N_reel")] = (X[3*i_pan+0, 0], X[3*i_pan+1, 0])
+        panneaux[i_pan]["coords"] = {"E": X[3*i_pan+0, 0] + DELTA_E, "N": X[3*i_pan+1, 0] + DELTA_N}
 
 # unproj Lambert93
 
@@ -100,8 +199,8 @@ lat, lng = proj_lambert_to_geo.transform(imagettes.E_reel, imagettes.N_reel)
 imagettes["lat_reel"] = lat
 imagettes["lng_reel"] = lng
 
+print("display...")
 # view
-
 def makeMarkerPhoto(azimut=0, fov=math.pi/2):
     pts = [(1,-0.5), (0,0), (-1,-0.5), (0,4)]
     pts = [(0, 2), (-1, 3), (0, 6), (1, 3), (0, 2),
