@@ -10,6 +10,8 @@ numpy==1.26.4
     #   pandas
 pandas==2.2.1
     # via -r requirements.in
+psycopg2==2.9.9
+    # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via pandas
 pytz==2024.1
