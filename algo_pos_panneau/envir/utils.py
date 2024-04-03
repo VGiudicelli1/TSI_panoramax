@@ -39,3 +39,25 @@ def proj_lambert_delta_to_geo(df, lat_column="lat", lng_column="lng", e_column="
     lat, lng = _transformer_lambert_to_geo.transform(df.loc[:, (e_column, )] + delta[0], df.loc[:, (n_column, )] + delta[1])
     df.loc[:, (lat_column, )] = lat
     df.loc[:, (lng_column, )] = lng
+
+
+if __name__ == "__main__":
+    ###########################################################################
+    ##  Test unitaires                                                       ##
+    ###########################################################################
+    import pandas as pd
+
+    data = pd.DataFrame([
+        ["Paris", 48.866, 2.333], 
+        ["Lyon", 45.750, 4.850], 
+        ["Toulouse", 43.600, 1.433]
+    ], columns=("ville", "lat", "lng"))
+    proj_geo_to_lambert_delta(data, delta=[0,0])
+    print(data)
+    assert abs(data.loc[0].e-651069.12) + abs(data.loc[0].n-6863092.19) < 1
+
+    data.lat = 0
+    data.lng = 0
+    proj_lambert_delta_to_geo(data, delta=[0,0])
+    print(data)
+    assert abs(data.loc[0].lat-48.866) + abs(data.loc[0].lng-2.333) < 0.01
