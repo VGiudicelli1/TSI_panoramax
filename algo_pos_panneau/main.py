@@ -5,6 +5,8 @@ import math
 import pyproj
 import matplotlib.pyplot as plt
 
+__path__ = "/".join(__file__.split("/")[:-1])
+
 print("""
 Unités (sauf contre-indication):
     angles: radian
@@ -32,7 +34,7 @@ proj_lambert_to_geo = pyproj.Transformer.from_crs("EPSG:2154", "EPSG:4326")
 
 print("load data...")
 # load data
-dataset = "../data_test/cropped_signs"
+dataset = __path__ + "/../data_test/cropped_signs"
 photos = pd.read_csv(dataset + "/photo.csv")
 imagettes = pd.read_csv(dataset + "/imagette.csv")
 
