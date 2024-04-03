@@ -18,11 +18,12 @@ def test_find_sign():
     edges = moteur.DetectionContours(gray)
     shape,contour = moteur.find_sign(img,edges)
     assert shape == 'cercle'
+
     img = cv2.imread('data_test/test_C12.jpg')
     gray = moteur.BGRtoGRAY(img)
     edges = moteur.DetectionContours(gray)
     shape,contour = moteur.find_sign(img,edges)
-    #assert shape == 'carre'
+    assert shape == 'carre'
 
 if __name__ == "__main__":
     import pytest
