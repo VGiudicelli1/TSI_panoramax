@@ -53,6 +53,8 @@ CREATE TABLE public.panneau
 	"size" FLOAT NOT NULL,
 	orientation FLOAT NOT NULL, 
 	precision FLOAT NOT NULL,
+	code CHARACTER VARYING(16) NOT NULL,
+	"value" CHARACTER VARYING(256) DEFAULT NULL,
 	
 	PRIMARY KEY (id)
 );
