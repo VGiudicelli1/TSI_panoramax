@@ -261,4 +261,4 @@ if __name__=="__main__":
 
 
 if __name__=="__main__":
-	dataframe = readCSVFile("../../donnees_exif_test.csv")
+	dataframe = readCSVFile("../../exif_data.csv")
