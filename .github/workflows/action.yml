@@ -28,5 +28,5 @@ jobs:
           pip install -r requirements.txt
         
       - name: Run des Tests
-        run: pytest -v action.py
+        run: pytest
 
