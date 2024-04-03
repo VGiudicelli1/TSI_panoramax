@@ -31,6 +31,8 @@ CREATE TABLE public.photo
 	azimut FLOAT NOT NULL,
 	width INTEGER NOT NULL,
 	height INTEGER NOT NULL,
+	fov FLOAT NOT NULL,
+	href CHARACTER VARYING(512) NOT NULL,
 	
 	PRIMARY KEY (id),
 	FOREIGN KEY (id_sequence)
