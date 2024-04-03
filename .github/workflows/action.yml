@@ -1,0 +1,32 @@
+name: Test
+on: 
+  - push
+  - pull_request
+jobs:
+  job_test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Test echo
+        run: echo "Coucou la team Panoramax !"
+  job_python:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10.11'
+      
+      - name: Installation Dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        
+      - name: Run des Tests
+        run: pytest
+
