@@ -37,8 +37,8 @@ def test_find_center_in_original_picture():
     w,h,x,y = extraction.get_whxy_from_img_path('data_test/test_A14.jpg')
     final_center = trouver_centre_panneau.find_center_in_original_picture(img, center_in_cropped, x, y)
     real_center = (659,2529)
-    assert(final_center[0] > (real_center[0]-20) & final_center[0] < (real_center[0] + 20))
-    assert(final_center[1] > (real_center[1]-20) & final_center[1] < (real_center[1] + 20))
+    assert(final_center[0] > (real_center[0]-10) & final_center[0] < (real_center[0] + 10))
+    assert(final_center[1] > (real_center[1]-10) & final_center[1] < (real_center[1] + 10))
 	    
 if __name__ == "__main__":
     import pytest
