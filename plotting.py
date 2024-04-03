@@ -56,7 +56,7 @@ def show_image_rectangle(img, corners, center, title="Image"):
     plt.scatter(*corners[0], color='red', label='Coord1')
     plt.scatter(*corners[1], color='green', label='Coord2')
     plt.scatter(*corners[2], color='blue', label='Coord3')
-    plt.scatter(*corners[3], color='blue', label='Center')
+    plt.scatter(*corners[3], color='purple', label='Coord4')
     plt.scatter(*center, color='blue', label='Center')
 
 
