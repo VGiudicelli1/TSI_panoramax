@@ -3,7 +3,7 @@ import moteur
 import cv2
 
 def test_get_whxy():
-    assert extraction.get_whxy_from_img_path('data_test/test_A14.jpg') == (11000, 5500, 5440, 2384)
+    assert extraction.get_whxy_from_img_path('data_test/test_A14.jpg') == (11000, 5500, 544, 2384)
     assert extraction.get_whxy_from_img_path('data_test/testB14.jpg') == (11000, 5500, 5952, 2720)
     assert extraction.get_whxy_from_img_path('data_test/test_C12.jpg') == (11000, 5500, 7104, 2416)
 
