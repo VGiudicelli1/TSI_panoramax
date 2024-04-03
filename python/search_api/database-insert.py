@@ -3,8 +3,12 @@ from datetime import datetime
 
 if __name__=="__main__":
 	# Read the csv file
-	csvPath = "../data/exif_data.csv"
+	csvPath = "../../data/exif_data_1.csv"
 	data = api.readCSVFile(csvPath)
+	
+	all360Pictures = ""
+	allNo360Pictures = ""
+	nonTreatedPictures = ""
 	
 	# Get the connection and create the general insert query
 	connection = api.getConnection("127.0.0.1")
@@ -56,25 +60,42 @@ if __name__=="__main__":
 		bbox = api.reformatBbox(row)
 		value_query["bbox_in_picture"] = bbox
 		
-		# Request the Search API to find information about the picture
-		info = api.getClosestPictureInformation(row["lon"], row["lat"])
-		
-		value_query["lon_picture"] = info["lon_picture"]
-		value_query["lat_picture"] = info["lat_picture"]
-		value_query["sequence_id"] = info["sequence_id"]
-		value_query["picture_id"] = info["picture_id"]
-		
-		is360picture = info["is360picture"]
-		
-		# If the picture is a 360 one, we save it
-		if is360picture:
-			# Creation of the query
-			query = insert_query.format(**value_query)
+		try:
 			
-			# Execution of the query and result print
-			linesNumber = api.insertQuery(connection, query)
-			if linesNumber > 0:
-				print("Information about picture {}/{} has been inserted in the database.".format(code, row["filename"]))
+			# Request the Search API to find information about the picture
+			info = api.getClosestPictureInformation(row["lon"], row["lat"])
 			
-		else:
-			print("The picture {}/{} is not a 360 image. It will not be downloaded.".format(code, row["filename"]))
+			value_query["lon_picture"] = info["lon_picture"]
+			value_query["lat_picture"] = info["lat_picture"]
+			value_query["sequence_id"] = info["sequence_id"]
+			value_query["picture_id"] = info["picture_id"]
+			
+			is360picture = info["is360picture"]
+			
+			# If the picture is a 360 one, we save it
+			if is360picture:
+				# Creation of the query
+				query = insert_query.format(**value_query)
+				
+				# Execution of the query and result print
+				linesNumber = api.insertQuery(connection, query)
+				if linesNumber > 0:
+					all360Pictures += "{}/{}\n".format(row["directory"], row["filename"])
+					print("Information about picture {}/{} has been inserted in the database.".format(code, row["filename"]))
+			else:
+				allNo360Pictures += "{}/{}\n".format(row["directory"], row["filename"])
+				print("The picture {}/{} is not a 360 image. It will not be downloaded.".format(code, row["filename"]))
+				
+		except Exception as e:
+			nonTreatedPictures += "{}/{}\n".format(row["directory"], row["filename"])
+			print("No features found for the following picture : {}/{}".format(row["directory"], row["filename"]))
+			
+	# We save into files the 360 pictures and the rest
+	with open("../../../all360Pictures.txt", 'w') as f:
+		f.writelines(all360Pictures)
+		
+	with open("../../../allNo360Pictures.txt", 'w') as f:
+		f.writelines(allNo360Pictures)
+		
+	with open("../../../nonTreatedPictures.txt", 'w') as f:
+		f.writelines(nonTreatedPictures)

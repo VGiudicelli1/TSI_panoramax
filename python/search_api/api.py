@@ -111,8 +111,7 @@ def extractCodeAndValue(row):
 		None if the sign has no value. Otherwise, correspond to the sign value
 
 	"""
-	directory = row["directory"]
-	code = directory[15::]
+	code = row["directory"]
 	if "B14" in code:
 		value = code[4::]
 		code = code[0:3]
