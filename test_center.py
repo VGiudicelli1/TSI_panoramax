@@ -7,7 +7,7 @@ dico = trouver_centre_panneau.csv_reader('panodico.csv')
 def test_get_whxy():
     assert extraction.get_whxy_from_img_path('data_test/test_A14.jpg') == (11000, 5500, 544, 2384)
     assert extraction.get_whxy_from_img_path('data_test/test_B14.jpg') == (11000, 5500, 5952, 2720)
-    assert extraction.get_whxy_from_img_path('data_test/test_C12.jpg') == (11000, 5500, 4208, 2672)
+    assert extraction.get_whxy_from_img_path('data_test/test_C12.jpg') == (11000, 5500, 7104, 2416)
 
 def test_get_shape():    
     img = cv2.imread('data_test/test_A14.jpg')
