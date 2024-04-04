@@ -52,3 +52,9 @@ Pour découvrir le code:
 Pour tester la détection d'objet:
 - https://github.com/panoramax-project/DetectionTutorial
 
+## Dependencies
+
+- [pyexiv2](https://github.com/LeoHsiao1/pyexiv2) - Version 2.12.0
+- [pytest](https://github.com/pytest-dev/pytest) - Version 8.1.1
+- [pillow](https://github.com/python-pillow/Pillow) - Version 10.3.0
+- [numpy](https://github.com/numpy/numpy) - Version 1.26.4
