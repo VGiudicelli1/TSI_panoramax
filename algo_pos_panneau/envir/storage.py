@@ -34,7 +34,7 @@ def _connect(config):
 
 def df_to_insert(df, df_keys, struct, pg_table, pg_columns):
     data = df.loc[:, df_keys].values
-    values = ",".join([struct.format(*line) for line in list(data)]).replace("'None'", "NULL")
+    values = ",".join([struct.format(*line) for line in list(data)]).replace("'None'", "NULL").replace("'nan'", "NULL").replace("nan", "NULL").replace("None", "NULL")
     return f'''
         INSERT INTO {pg_table} ({",".join(pg_columns)})
         VALUES {values}'''
@@ -49,7 +49,6 @@ def init_tests():
     photo = pd.read_csv(__path__ + "/../../data_test/cropped_signs/photo.csv")
     imagette = pd.read_csv(__path__ + "/../../data_test/cropped_signs/imagette.csv")
     photo["id_seq"] = seq_id
-    #print(photo.loc[1:0])
     photo["width"] = 5760
     photo["height"] = 2880
     imagette["value"] = "30"
@@ -122,7 +121,6 @@ def select_from_sequence(id_sequence):
 def update_imagette(imagette):
     try:
         with conn.cursor() as cur:
-            #cur.execute(f"UPDATE")
             data = imagette.loc[:, ("id", "id_photo", "id_panneau", "x", "y", "dz", "code", "value", "lat", "lng")].values
             for line in data:
                 query = """
@@ -131,6 +129,49 @@ def update_imagette(imagette):
                 WHERE id='{0}'
                 """.format(*line).replace("'None'", "NULL")
                 cur.execute(query)
+            conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        raise error
+    
+def get_new_unique_id_panneau(increment=True):
+    try:
+        with conn.cursor() as cur:
+            fonc = "NEXTVAL" if increment else "CURRVAL"
+            cur.execute(f"SELECT {fonc}(PG_GET_SERIAL_SEQUENCE('panneau', 'id'))")
+            conn.commit()
+            id = cur.fetchone()[0]
+            return id
+    except (Exception, psycopg2.DatabaseError) as error:
+        raise error
+
+def update_panneau(panneau):
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT id FROM panneau WHERE id IN ({','.join(map(str, panneau.id.values))})")
+            ids = cur.fetchall()
+            print("0", ids)
+            # revoir ces extractions
+            panneau_update = panneau.set_index("id").loc[ids]
+            print("1")
+            panneau_insert = panneau.set_index("id").loc[panneau.index.difference(ids)]
+            print("2")
+
+            data = panneau_update.loc[:, ("id", "lat", "lng", "size", "orientation", "precision", "code", "value")].values
+            for line in data:
+                query = """
+                UPDATE panneau SET geom=ST_POINT({2}, {1}, 4326), size={3}, orientation={4}, precision={5}, code='{6}', value='{7}'
+                WHERE id='{0}'
+                """.format(*line).replace("'None'", "NULL")
+                cur.execute(query)
+            conn.commit()
+
+            cur.execute(df_to_insert(
+                panneau_insert,
+                ("id", "lat", "lng", "size", "orientation", "precision", "code", "value"),
+                "({0}, ST_POINT({2}, {1}, 4326), {3}, {4}, {5}, '{6}', '{7}')",
+                "panneau",
+                ("id", "geom", "size", "orientation", "precision", "code", "value")
+            ))
             conn.commit()
     except (Exception, psycopg2.DatabaseError) as error:
         raise error
@@ -143,8 +184,3 @@ _config = _load_config()
 conn = _connect(_config)
 
 #init_tests()
-
-if __name__ == "__main__":
-    # run current file
-    import estim_img_pos
-    estim_img_pos.estim_img_pos_for_sequence(get_sequence_ids()[0]);

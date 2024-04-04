@@ -29,5 +29,7 @@ def estim_img_pos_for_sequence(id_sequence):
 
 
 if __name__ == "__main__":
+    from view_sequence import view_sequence
     id_sequence = storage.get_sequence_ids()[0]
     estim_img_pos_for_sequence(id_sequence)
+    view_sequence(id_sequence)
