@@ -58,3 +58,4 @@ Pour tester la détection d'objet:
 - [pytest](https://github.com/pytest-dev/pytest) - Version 8.1.1
 - [pillow](https://github.com/python-pillow/Pillow) - Version 10.3.0
 - [numpy](https://github.com/numpy/numpy) - Version 1.26.4
+- [pandas](https://github.com/pandas-dev/pandas) - Version 2.2.1
