@@ -13,13 +13,26 @@ import cv2
 import math
 import plotting
 import extraction
+import pandas as pd
 
 #### I - Récupération d'informations et de photos, application des filtres #######
 
 
-
-#Récupération d'un csv, dans notre cas le dictionnaire
 def csv_reader(path):
+    """
+    Read a csv file and makes it a dictionnary
+
+    Parameters
+    ----------
+    path : String
+        Path of .csv file.
+
+    Returns 
+    -------
+    TYPE : Dictionnary
+        Associates each sign code to a number between 0 and 9, correspondin to the sign shape
+
+    """
     return dict(np.genfromtxt(path, delimiter=",", dtype=None, encoding='UTF8'))
 
 # Convertir l'image en niveaux de gris
@@ -177,17 +190,38 @@ def get_center_code_3(img, contour):
     return center
     
 if __name__ == '__main__':
+    folder = "/home/formation/Victorien/Projet_Panneau/detectcenter/trié2"
+    source = "/home/formation/Victorien/TSI_panoramax/panneaux_data_limit_100.csv"
+    data = pd.read_csv(source)
+    # Créer une liste pour chaque ligne
+    listes_lignes = data.values.tolist()
     dictionnaire_source = "/home/formation/Victorien/Projet_Panneau/Code_trouver_centre_panneau/panodico.csv"
     dico = csv_reader(dictionnaire_source)
+    for element in listes_lignes:
+        tag = element[3]
+        if not math.isnan(element[4]):
+            picture_path = folder + "/"+tag + "-" + element[4] +"/" + element[2]
+        else:
+            picture_path = folder + "/"+tag+"/" + element[2]
+
+        img = cv2.imread(picture_path)
+        imgGray = BGRtoGRAY(img)
+        imgEdges = DetectionContours(imgGray)
+        shape = get_shape(tag, dico)
+        center_in_cropped = get_center_in_cropped_sign(img, shape, imgEdges)
+        print("La valeur du centre : ", center_in_cropped)
+        w,h,x,y = extraction.get_whxy_from_img_path(picture_path)
+        final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
+        print(final_center)
     # Pour l'instant, nous allons travailler sur une seule photo, d'un triangle de type 0
-    photo_path = "/home/formation/Victorien/Projet_Panneau/Code_trouver_centre_panneau/panotest2.jpg"
-    tag = "B14"
-    img = cv2.imread(photo_path)
-    imgGray = BGRtoGRAY(img)
-    imgEdges = DetectionContours(imgGray)
-    shape = get_shape(tag, dico)
-    center_in_cropped = get_center_in_cropped_sign(img, shape, imgEdges)
-    print("La valeur du centre : ", center_in_cropped)
-    w,h,x,y = extraction.get_whxy_from_img_path(photo_path)
-    final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
-    print(final_center)
+    #photo_path = "/home/formation/Victorien/Projet_Panneau/Code_trouver_centre_panneau/panotest2.jpg"
+    #tag = "B14"
+    # img = cv2.imread(photo_path)
+    # imgGray = BGRtoGRAY(img)
+    # imgEdges = DetectionContours(imgGray)
+    # shape = get_shape(tag, dico)
+    # center_in_cropped = get_center_in_cropped_sign(img, shape, imgEdges)
+    # print("La valeur du centre : ", center_in_cropped)
+    # w,h,x,y = extraction.get_whxy_from_img_path(photo_path)
+    # final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
+    # print(final_center)
