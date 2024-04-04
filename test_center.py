@@ -1,5 +1,5 @@
 import extraction
-import moteur
+import trouver_centre_panneau
 
 def test_get_whxy():
     assert get_whxy_from_img_path('test_A14.jpg') == (11000, 5500, 5440, 2384)
