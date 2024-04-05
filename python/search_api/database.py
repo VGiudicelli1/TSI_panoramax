@@ -208,8 +208,6 @@ def croppedSignInDatabase(connection, row, table = "cropped_sign"):
 	cursor.close()
 	
 	return isInDB
-	
-	
 
 def itemAlreadyInDatabase(connection, itemId, table):
 	"""
@@ -242,3 +240,49 @@ def itemAlreadyInDatabase(connection, itemId, table):
 	cursor.close()
 	
 	return isInDB
+
+def updateCenterOfSign(connection, id, x, y, dz, table = "cropped_sign"):
+	"""
+	Update the position if the picture of the cropped sign, with the good id.
+
+	Parameters
+	----------
+	connection : psycopg2.extensions.connection
+		Database connection token.
+	id : str
+		Id of the cropped sign.
+	x : int
+		X position of the center of the sign in the original picture.
+	y : int
+		X position of the center of the sign in the original picture.
+	dz : float
+		Height of the sign in the original picture.
+	table : str, optional
+		Name of the cropped sign table. The default is "cropped_sign".
+
+	Returns
+	-------
+	linesNumber : int
+		Number of lines affected by the query.
+
+	"""
+	# Create the query
+	query = """UPDATE {} SET x={}, y={}, dz={}
+	WHERE id = '{}';""".format(table, x, y, dz, id)
+	
+	linesNumber = 0
+	try:
+		# Execute and commit the query
+		cursor = connection.cursor()
+		cursor.execute(query)
+		connection.commit()
+		linesNumber = cursor.rowcount
+	except Exception as e:
+		# If there is an error, the transaction is canceled
+		connection.rollback()
+		log("The following error occured :", e)
+	finally:
+		# The transaction is closed anyway
+		cursor.close()
+		return linesNumber
+	
