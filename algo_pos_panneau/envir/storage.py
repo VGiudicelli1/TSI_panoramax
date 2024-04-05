@@ -148,22 +148,17 @@ def update_panneau(panneau):
     try:
         with conn.cursor() as cur:
             cur.execute(f"SELECT id FROM panneau WHERE id IN ({','.join(map(str, panneau.id.values))})")
-            ids = cur.fetchall()
-            print("0", ids)
-            # revoir ces extractions
-            panneau_update = panneau.set_index("id").loc[ids]
-            print("1")
-            panneau_insert = panneau.set_index("id").loc[panneau.index.difference(ids)]
-            print("2")
+            ids = [e for l in cur.fetchall() for e in l]
+            panneau_update = panneau.loc[panneau.id.isin(ids)]
+            panneau_insert = panneau.loc[1-panneau.id.isin(ids)]
 
             data = panneau_update.loc[:, ("id", "lat", "lng", "size", "orientation", "precision", "code", "value")].values
             for line in data:
                 query = """
                 UPDATE panneau SET geom=ST_POINT({2}, {1}, 4326), size={3}, orientation={4}, precision={5}, code='{6}', value='{7}'
-                WHERE id='{0}'
+                WHERE id={0}
                 """.format(*line).replace("'None'", "NULL")
                 cur.execute(query)
-            conn.commit()
 
             cur.execute(df_to_insert(
                 panneau_insert,
@@ -173,8 +168,9 @@ def update_panneau(panneau):
                 ("id", "geom", "size", "orientation", "precision", "code", "value")
             ))
             conn.commit()
-    except (Exception, psycopg2.DatabaseError) as error:
-        raise error
+    except ():#Exception, psycopg2.DatabaseError) as error:
+        pass
+#        raise error
 
 ###############################################################################
 ##  Start                                                                    ##

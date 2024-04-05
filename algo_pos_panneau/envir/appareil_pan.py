@@ -58,6 +58,9 @@ def appareil_pan_with_estim_pos(id_sequence):
         for i in range(k+1):
             new_panneaux.append((list(cluster.index[classif==i]), centroides[i]))
 
+    print(new_panneaux)
+    print(panneau)
+
     for ids_img, pos in new_panneaux:
         i = len(panneau)
         id = storage.get_new_unique_id_panneau()
@@ -71,12 +74,12 @@ def appareil_pan_with_estim_pos(id_sequence):
     utils.proj_lambert_delta_to_geo(panneau)
     utils.proj_lambert_delta_to_geo(imagette)
 
-    storage.update_panneau(panneau)
-    storage.update_imagette(imagette)
+    #storage.update_panneau(panneau)
+    #storage.update_imagette(imagette)
 
 
 if __name__ == "__main__":
     from view_sequence import view_sequence
     id_sequence = storage.get_sequence_ids()[0]
     appareil_pan_with_estim_pos(id_sequence)
-    view_sequence(id_sequence)
+    #view_sequence(id_sequence)
