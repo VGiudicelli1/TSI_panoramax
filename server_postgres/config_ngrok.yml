@@ -1,0 +1,9 @@
+version: "2"
+authtoken: #################
+tunnels:
+  pgadmin:
+    proto: http
+    addr: localhost:5050
+  postgres:
+    proto: tcp
+    addr: localhost:5432
