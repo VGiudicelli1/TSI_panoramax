@@ -14,6 +14,7 @@ import math
 import plotting
 import extraction
 import pandas as pd
+import os
 
 #### I - Récupération d'informations et de photos, application des filtres #######
 
@@ -55,12 +56,12 @@ def find_center_in_original_picture(img, center, x, y):
 
 def get_image_center(img):
     height, width = img.shape[:2]
-    print('height', height)
-    print('width', width)
+    #print('height', height)
+    #print('width', width)
     center_x = width // 2
     center_y = height // 2
-    print('height', center_x)
-    print('width', center_y)
+    #print('height', center_x)
+    #print('width', center_y)
     # Récupérer la valeur du pixel au centre
     center = (center_x, center_y)
     return center
@@ -75,7 +76,7 @@ def get_shape(tag, dico):
 
 # Fonction de répartition de la recherche du contour de panneau en focntion du signe
 def get_center_in_cropped_sign(img, shape, imgEdges):
-    contour_sign = get_contour(img, imgEdges)
+    contour_sign = get_contour(img, imgEdges, shape)
     if shape == 0: ## Cas du triangle : on lance les fonctions
         if contour_sign[1] != 3: # SI le triangle n'a pas été reconnu ...
             center_sign = get_image_center(img)# ... On lance la fonction qui prend le milieu de l'image
@@ -119,7 +120,14 @@ def make_liste_contour(contour):
 
 ###### Cas des triangles (cas base en haut, et cas base en bas) ######### 
 
-def get_contour(img, edges):
+def get_contour(img, edges, shape):
+    
+    if shape == 2 or shape == 4:
+        value_for_epsilon = 0.02
+    elif shape == 0 or shape ==1 or shape == 9 :
+        value_for_epsilon = 0.15
+    else:
+        value_for_epsilon = 0.15
     # On trouve les contours dans l'image
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -127,17 +135,19 @@ def get_contour(img, edges):
     
     # Approximer le contour avec un polygone
     largest_contour = contours[0]
-    epsilon = 0.01 * cv2.arcLength(largest_contour, True)
+    epsilon = value_for_epsilon * cv2.arcLength(largest_contour, True)
     approx = cv2.approxPolyDP(largest_contour, epsilon, True)
     # Déterminer le nombre de côtés du polygone
     sides = len(approx)
+    # cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
+    # cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
+    #print("valeur de sides : ", sides)
+    which_circle(img, largest_contour)
     cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
     cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
-    print("valeur de sides : ", sides)
-    return largest_contour, sides
+    return approx, sides
 
 def get_center_code_01(img, contour_sign, boolean):
-    
     liste_pixels = make_liste_contour(contour_sign)
     # Récupérer la coordonnée avec le x minimum
     coord_x_min = min(liste_pixels, key=lambda coord: coord[0])
@@ -189,30 +199,127 @@ def get_center_code_3(img, contour):
     plotting.show_image_rectangle(img, corners, center)
     return center
     
-if __name__ == '__main__':
-    folder = "/home/formation/Victorien/Projet_Panneau/detectcenter/trié2"
-    source = "/home/formation/Victorien/TSI_panoramax/panneaux_data_limit_100.csv"
-    data = pd.read_csv(source)
-    # Créer une liste pour chaque ligne
-    listes_lignes = data.values.tolist()
-    dictionnaire_source = "/home/formation/Victorien/Projet_Panneau/Code_trouver_centre_panneau/panodico.csv"
-    dico = csv_reader(dictionnaire_source)
-    for element in listes_lignes:
-        tag = element[3]
-        if not math.isnan(element[4]):
-            picture_path = folder + "/"+tag + "-" + element[4] +"/" + element[2]
-        else:
-            picture_path = folder + "/"+tag+"/" + element[2]
+def which_circle(img, contour):
+    # Calcul des coordonnées pour les pixels décalés
+    liste_pixels = make_liste_contour(contour)
 
+    x_min = min(liste_pixels, key=lambda coord: coord[0])
+    x_max = max(liste_pixels, key=lambda coord: coord[0])
+    y_min = min(liste_pixels, key=lambda coord: coord[1])
+    y_max = max(liste_pixels, key=lambda coord: coord[1])
+    #print("exemple de coordonnées : ", x_min)
+    
+    color1 = get_pixel_rgb(img, x_min[0] + 3, x_min[1])
+    color2 = get_pixel_rgb(img, x_max[0] - 3, x_max[1])
+    color3 = get_pixel_rgb(img, y_min[0], y_min[1] + 3)
+    color4 = get_pixel_rgb(img, y_max[0], y_max[1] - 3)
+    liste_couleurs = (color1, color2, color3, color4)
+    verif = []
+    for color in liste_couleurs:
+        R = color[0]
+        v=color[1]
+        v2 = color[2]
+        C = int(v) + int(v2)
+        #C = color[1] + color[2]
+        #print("color R", R)
+        #print("value C", C)
+        if R > C:
+            verif.append(R)
+    print("Les couleurs sont :", color1, color2, color3, color4)
+    if len(verif)>= 3:
+        h1 = np.sqrt((x_min[0] - x_max[0])**2 + (x_min[1] - x_max[1])**2)
+        h2 = np.sqrt((y_min[0] - y_max[0])**2 + (y_min[1] - y_max[1])**2)
+        h = (h1 + h2) / 2
+        return h
+    else:
+        get_hauteur_sign(img,x_min, x_max, y_min, y_max)
+
+def get_hauteur_sign(img, p1, p2, p3, p4):
+    gray = BGRtoGRAY(img)
+    IMGcanny = DetectionContours(gray)  # Utiliser Canny pour détecter les contours
+
+    # Calculer les coefficients des droites P1-P2 et P3-P4 (y = mx + c)
+    m1 = (p2[1] - p1[1]) / (p2[0] - p1[0])
+    c1 = p1[1] - m1 * p1[0]
+
+    m2 = (p4[1] - p3[1]) / (p4[0] - p3[0])
+    c2 = p3[1] - m2 * p3[0]
+
+    matrice_contours = np.zeros_like(IMGcanny)
+    # Remplacer les pixels de contour par 1
+    matrice_contours[IMGcanny > 0] = 1
+
+    # Parcourir chaque pixel de l'image
+    for y in range(img.shape[0]):
+        # Vérifier si le pixel valide l'une des deux équations de droite
+        
+        if (y - m1 * x - c1) * (y - m2 * x - c2) <= 0:
+            matrice_contours[y, x] = 2
+
+    # Enregistrer la matrice de contours dans un fichier texte
+    np.savetxt("matrice_contours.txt", matrice_contours, fmt='%d')
+
+
+def get_pixel_rgb(image, row, col):
+    pixel_rgb = image[col, row]  # Assurez-vous d'utiliser les coordonnées dans l'ordre (colonne, ligne)
+    R = pixel_rgb[2]
+    V = pixel_rgb[1]
+    B = pixel_rgb[0]
+    
+    real_color = [R,V,B]
+    return real_color
+
+if __name__ == '__main__':
+    
+    #folder = "C:/Users/Myriam/Documents/IT3/Panoramax/TSI_panoramax/data_test"
+    dictionnaire_source = "panodico.csv"
+    dico = csv_reader(dictionnaire_source)
+    
+    folder = "./center_test"
+    dirs = os.listdir(folder)
+    
+    # This would print all the files and directories
+    tag = "B14"
+    count = 1
+    for file in dirs:
+        print("IMAGE ", count)
+        picture_path = "center_test/" + file
+       # print(picture_path)
         img = cv2.imread(picture_path)
         imgGray = BGRtoGRAY(img)
         imgEdges = DetectionContours(imgGray)
         shape = get_shape(tag, dico)
+        #print("shape = ", shape)
         center_in_cropped = get_center_in_cropped_sign(img, shape, imgEdges)
-        print("La valeur du centre : ", center_in_cropped)
+        #print("La valeur du centre : ", center_in_cropped)
         w,h,x,y = extraction.get_whxy_from_img_path(picture_path)
         final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
-        print(final_center)
+        #print(final_center)
+        count +=1
+        
+    # folder = "/home/formation/Victorien/Projet_Panneau/detectcenter/trié2"
+    # source = "/home/formation/Victorien/TSI_panoramax/panneaux_data_limit_100.csv"
+    # data = pd.read_csv(source)
+    # # Créer une liste pour chaque ligne
+    # listes_lignes = data.values.tolist()
+    # dictionnaire_source = "/home/formation/Victorien/Projet_Panneau/Code_trouver_centre_panneau/panodico.csv"
+    # dico = csv_reader(dictionnaire_source)
+    # for element in listes_lignes:
+    #     tag = element[3]
+    #     if not math.isnan(element[4]):
+    #         picture_path = folder + "/"+tag + "-" + element[4] +"/" + element[2]
+    #     else:
+    #         picture_path = folder + "/"+tag+"/" + element[2]
+
+    #     img = cv2.imread(picture_path)
+    #     imgGray = BGRtoGRAY(img)
+    #     imgEdges = DetectionContours(imgGray)
+    #     shape = get_shape(tag, dico)
+    #     center_in_cropped = get_center_in_cropped_sign(img, shape, imgEdges)
+    #     print("La valeur du centre : ", center_in_cropped)
+    #     w,h,x,y = extraction.get_whxy_from_img_path(picture_path)
+    #     final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
+    #     print(final_center)
     # Pour l'instant, nous allons travailler sur une seule photo, d'un triangle de type 0
     #photo_path = "/home/formation/Victorien/Projet_Panneau/Code_trouver_centre_panneau/panotest2.jpg"
     #tag = "B14"
@@ -225,3 +332,4 @@ if __name__ == '__main__':
     # w,h,x,y = extraction.get_whxy_from_img_path(photo_path)
     # final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
     # print(final_center)
+        
