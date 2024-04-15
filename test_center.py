@@ -49,10 +49,21 @@ def test_find_center_in_original_picture():
     center_in_cropped = trouver_centre_panneau.get_center_in_cropped_sign(img,shape,imgEdges)
     w,h,x,y = extraction.get_whxy_from_img_path('data_test/test_B14.jpg')
     finale_center = trouver_centre_panneau.find_center_in_original_picture(img, center_in_cropped,x,y)
-    real_center = ()
+    real_center = (5999,2786)
     assert(final_center[0] > (real_center[0]-10) & final_center[0] < (real_center[0] + 10))
     assert(final_center[1] > (real_center[1]-10) & final_center[1] < (real_center[1] + 10))
 
+    #Testing Square Shape
+    img = cv2.imread('data_test/test_C12.jpg')
+    imgGray = trouver_centre_panneau.BGRtoGRAY(img)
+    imgEdges = trouver_centre_panneau.DetectionContours(imgGray)
+    shape = trouver_centre_panneau.get_shape('C12',dico)
+    center_in_cropped = trouver_centre_panneau.get_center_in_cropped_sign(img,shape,imgEdges)
+    w,h,x,y = extraction.get_whxy_from_img_path('data_test/test_C12.jpg')
+    finale_center = trouver_centre_panneau.find_center_in_original_picture(img, center_in_cropped,x,y)
+    real_center = (5999,2786)
+    assert(final_center[0] > (real_center[0]-10) & final_center[0] < (real_center[0] + 10))
+    assert(final_center[1] > (real_center[1]-10) & final_center[1] < (real_center[1] + 10))
     
 if __name__ == "__main__":
     import pytest
