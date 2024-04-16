@@ -1,5 +1,4 @@
 import psycopg2
-from csv_manager import extractCodeAndValue
 
 log = print
 
@@ -90,7 +89,8 @@ def selectAll(connection, table, limit=-1):
 
 	Returns
 	-------
-	None.
+	cursor : psycopg2.extensions.cursor
+		Cursor containing the query
 
 	"""
 	# Creation of the query
@@ -106,6 +106,38 @@ def selectAll(connection, table, limit=-1):
 	finally:
 		return cursor
 
+def selectCroppedSignByFilename(connection, filename, table = "cropped_sign"):
+	"""
+	Select a cropped sign with a given filename.
+	There is a tiny possibility that multiple cropped sign are returned by the
+	query.
+
+	Parameters
+	----------
+	connection : psycopg2.extensions.connection
+		Database connection token.
+	filename : str
+		Filename of the cropped sign.
+	table : str, optional
+		Name of the cropped signs table. The default is "cropped_sign".
+
+	Returns
+	-------
+	cursor : psycopg2.extensions.cursor
+		Cursor containing the query
+
+	"""
+	# Creation of the query
+	query = "SELECT * FROM {} WHERE filename = '{}'".format(table, filename)
+	log(query)
+	cursor = connection.cursor()
+	try:
+		# Execute the query
+		cursor.execute(query)
+	except Exception as e:
+		log("The following error occured :", e)
+	finally:
+		return cursor
 
 def getValueAtColumn(row, columns, name):
 	"""
@@ -129,12 +161,7 @@ def getValueAtColumn(row, columns, name):
 	value = row[columns.index(name)]
 	return value
 
-
-def getPathFromRow(row,
-				   columns,
-				   filenameColumn = "filename",
-				   codeColumn = "code",
-				   valueColumn = "value"):
+def getPathFromRow(row, columns):
 	"""
 	Return the path of the cropped sign saved in local.
 
@@ -144,12 +171,6 @@ def getPathFromRow(row,
 		Row of the database.
 	columns : list
 		List of all column names.
-	filenameColumn : str, optional
-		Name of the column with the filename. The default is "filename".
-	codeColumn : str, optional
-		Name of the column with the sign code. The default is "code".
-	valueColumn : str, optional
-		Name of the column with the sign value. The default is "value".
 
 	Returns
 	-------
@@ -157,9 +178,9 @@ def getPathFromRow(row,
 		Path of the cropped sign in local.
 
 	"""
-	filename = getValueAtColumn(row, columns, filenameColumn)
-	code = getValueAtColumn(row, columns, codeColumn)
-	value = getValueAtColumn(row, columns, valueColumn)
+	filename = getValueAtColumn(row, columns, "filename")
+	code = getValueAtColumn(row, columns, "code")
+	value = getValueAtColumn(row, columns, "value")
 	
 	# For the moment, only the B14 sign has a value
 	if "B14" in code:
@@ -169,16 +190,17 @@ def getPathFromRow(row,
 	
 	return path
 
-def croppedSignInDatabase(connection, row, table = "cropped_sign"):
+def croppedSignInDatabase(connection, filename, table = "cropped_sign"):
 	"""
-	Return true if the cropped sign is already in the database
+	Return true if the cropped sign is already in the database.
+	It is based on the cropped sign filename.
 
 	Parameters
 	----------
 	connection : psycopg2.extensions.connection
 		Database connection token.
-	row : tuple
-		Row of the database.
+	filename : str
+		Filename of the cropped sign.
 	table : str, optional
 		Name of the cropped signs table. The default is "cropped_sign".
 
@@ -188,15 +210,9 @@ def croppedSignInDatabase(connection, row, table = "cropped_sign"):
 		True if the cropped sign is already saved into the database.
 
 	"""
-	# Extract the filename, code and value from the row
-	filename = row["filename"]
-	code, value = extractCodeAndValue(row)
-	
 	# Create and execute the query
 	query = """SELECT * FROM {}
-		WHERE filename = '{}'
-		AND code = '{}'
-		AND value = '{}';""".format(table, filename, code, value)
+		WHERE filename = '{}';""".format(table, filename)
 	
 	cursor = connection.cursor()
 	cursor.execute(query)
@@ -204,16 +220,18 @@ def croppedSignInDatabase(connection, row, table = "cropped_sign"):
 	# Check the number of rows
 	isInDB = (cursor.rowcount > 0)
 	
+	if cursor.rowcount > 1:
+		log("Warning : {} items has the following filename : {}"
+	  .format(cursor.rowcount, filename))
+	
 	# Close the cursor
 	cursor.close()
 	
 	return isInDB
-	
-	
 
 def itemAlreadyInDatabase(connection, itemId, table):
 	"""
-	Return true if the item is already saved in the table.
+	Return true if the item id is already saved in the table.
 
 	Parameters
 	----------
@@ -242,3 +260,50 @@ def itemAlreadyInDatabase(connection, itemId, table):
 	cursor.close()
 	
 	return isInDB
+
+
+def updateCenterOfSign(connection, id, x, y, dz, table = "cropped_sign"):
+	"""
+	Update the position if the picture of the cropped sign, with the good id.
+
+	Parameters
+	----------
+	connection : psycopg2.extensions.connection
+		Database connection token.
+	id : str
+		Id of the cropped sign.
+	x : int
+		X position of the center of the sign in the original picture.
+	y : int
+		X position of the center of the sign in the original picture.
+	dz : float
+		Height of the sign in the original picture.
+	table : str, optional
+		Name of the cropped sign table. The default is "cropped_sign".
+
+	Returns
+	-------
+	linesNumber : int
+		Number of lines affected by the query.
+
+	"""
+	# Create the query
+	query = """UPDATE {} SET x={}, y={}, dz={}
+	WHERE id = '{}';""".format(table, x, y, dz, id)
+	
+	linesNumber = 0
+	try:
+		# Execute and commit the query
+		cursor = connection.cursor()
+		cursor.execute(query)
+		connection.commit()
+		linesNumber = cursor.rowcount
+	except Exception as e:
+		# If there is an error, the transaction is canceled
+		connection.rollback()
+		log("The following error occured :", e)
+	finally:
+		# The transaction is closed anyway
+		cursor.close()
+		return linesNumber
+	
