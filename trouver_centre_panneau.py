@@ -16,8 +16,6 @@ import extraction
 import pandas as pd
 import os
 
-#### I - Récupération d'informations et de photos, application des filtres #######
-
 
 def csv_reader(path):
     """
@@ -36,127 +34,188 @@ def csv_reader(path):
     """
     return dict(np.genfromtxt(path, delimiter=",", dtype=None, encoding='UTF8'))
 
-# Convertir l'image en niveaux de gris
+
 def BGRtoGRAY(img):
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	return gray
 
-# Détection des contours par filtre de Canny
+
 def DetectionContours(imgGray):
 	imgBlur = cv2.GaussianBlur(imgGray, (5, 5), 0)
 	edges = cv2.Canny(imgBlur, 50, 150)
 	return edges
 
 
-def find_center_in_original_picture(img, center, x, y):
-    final_x = x + center[0]
-    final_y = y + center[1]
-    final_center = (final_x,final_y)
-    return final_center
-
-def get_image_center(img):
-    height, width = img.shape[:2]
-    #print('height', height)
-    #print('width', width)
-    center_x = width // 2
-    center_y = height // 2
-    #print('height', center_x)
-    #print('width', center_y)
-    # Récupérer la valeur du pixel au centre
-    center = (center_x, center_y)
-    return center
-
-########## II - Récupération de la forme, du contour, et du centre dans le crop ######
-
-
-
-# Récupération de la forme recherchée
 def get_shape(tag, dico):
+    """
+    Returns the shape of the sign in the cropped image, with a code systemm
+    (exemple : 0 = triangle, 2 = octogon, etc)
+
+    Parameters
+    ----------
+    tag : String
+        Code of the sign in the original nomenclature.
+    dico : dict
+        Dictionnary associating to a tag a code symbolizing its shape.
+
+    Returns
+    -------
+    TYPE : int
+        Code symbolizing the sign shape.
+
+    """
     return dico[tag]
 
-# Fonction de répartition de la recherche du contour de panneau en focntion du signe
-def get_center_in_cropped_sign(img, shape, imgEdges):
-    contour_sign = get_contour(img, imgEdges, shape)
-    if shape == 0: ## Cas du triangle : on lance les fonctions
-        if contour_sign[1] != 3: # SI le triangle n'a pas été reconnu ...
-            center_sign = get_image_center(img)# ... On lance la fonction qui prend le milieu de l'image
-        else:
-            center_sign = get_center_code_01(img, contour_sign[0], True) # Sinon on cherche le milieu du triangle à l'endroit.
-            
-    elif shape == 1 or shape == 9: ## Cas du triangle à l'envers : on appelle les fonctions
-        if contour_sign[1] != 3: # SI le triangle n'a pas été reconnu ...
-            center_sign = get_image_center(img)# ... On lance la fonction qui prend le milieu de l'image
-        else:
-            center_sign = get_center_code_01(img, contour_sign[0], False) # Sinon on cherche le milieu du triangle à l'envers
-    
-    elif shape == 2 :## Cas de l'octogone
-        if contour_sign[1] != 8: # SI l'octogone n'a pas été reconnu ...
-            print("forme du panneau non reconnue")
-            center_sign = get_image_center(img)# ... On lance la fonction qui prend le milieu de l'image
-        else:
-            print("octogone reconnu")
-            center_sign = get_center_code_2(img, contour_sign[0]) # Sinon on cherche le milieu du triangle à l'endroit.
-    elif shape == 3 or shape== 5 or shape == 6 or shape == 7 or shape == 8:## Cas du rectangle
-        if contour_sign[1] != 4: # SI l'octogone n'a pas été reconnu ...
-            print("forme du panneau non reconnue")
-            center_sign = get_image_center(img)# ... On lance la fonction qui prend le milieu de l'image
-        else:
-            center_sign = get_center_code_3(img, contour_sign[0]) # Sinon on cherche le milieu du triangle à l'endroit.
+
+def get_contour(img, edges, shape):
+    """
+    This function returns the biggest closed contour found in the cropped sign,
+    considered so as the sign contour
+
+    Parameters
+    ----------
+    img : ndarray
+        Cropped sign image.
+    edges : ndarray
+        Canny contours detected in img.
+    shape : int
+        Code symbolizing the shape of the sign in the imge
+
+    Returns
+    -------
+    approx : ndarray
+        Approximation of the largest polygon on the image.
+    sides : int
+        Number of sides of the polygon approximated on the biggest contour detected.
+
+    """
+    # On attribue une valeur de epsilon pour cibler au mieux une recherche de forme
+    if shape == 2 or shape == 4: # Circle and Octogon
+        value_for_epsilon = 0.02
+    elif shape == 0 or shape ==1 or shape == 9 : # Triangle
+        value_for_epsilon = 0.15
     else:
-        center_sign = get_center_code_2(img, contour_sign[0])
+        value_for_epsilon = 0.15
+    # Finding contours in the image
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Sorting them to get the biggest one
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    largest_contour = contours[0]
+    
+    # Approximation of a polygon
+    epsilon = value_for_epsilon * cv2.arcLength(largest_contour, True) # Definition of the factor 
+    approx = cv2.approxPolyDP(largest_contour, epsilon, True) # Approximation
+    sides = len(approx) # Number of sides of the polygon, to know if we found the good form
+    # x_min, x_max, y_min, y_max = which_circle(img, largest_contour)
+    #cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
+    #cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
+    return approx, sides
+
+
+def get_center_in_cropped_sign(img, shape, imgEdges, contour_sign, number_of_sides):
+    """
+    This function returns the center of the sign in the cropped image.
+    It does have a role of a processing function.
+
+    Parameters
+    ----------
+    img : ndarray
+        Image of the cropped sign.
+    shape : int
+        Code to signify the shape of the sign in the image.
+    imgEdges : ndarray
+        Canny contours detected in the cropped sign image.
+    contour_sign : ndarray
+        list of the points constituing the contour of the sign.
+    number_of_sides : int
+        Number of sides detectedof the polygon
+
+    Returns
+    -------
+    center_sign : tuple
+        Center of the sign in the cropped image
+
+    """
+    if shape == 0: ## Triangle-top case
+        if number_of_sides != 3: # If the number of sides is not corresponding to the hoped shape ...
+            center_sign = None # ... We just take the center of the cropped sign
+        else:
+            center_sign = get_center_triangle(img, contour_sign, True) # Or we search the center of the sign (to the top)
+            
+    elif shape == 1 or shape == 9: ## Triangle-bottom case
+        if number_of_sides != 3: # If the number of sides is not corresponding to the hoped shape ...
+            center_sign = None # ...  We just take the center of the cropped sign
+        else:
+            center_sign = get_center_triangle(img, contour_sign, False) # Or we search the center of the sign (to the bottom)
+    
+    elif shape == 2 :## Octogon case
+        if number_of_sides != 8: # If the number of sides is not corresponding to the hoped shape ...
+            center_sign = None # ... We just take the center of the cropped sign
+        else:
+            center_sign = get_center_circle(img, contour_sign) #  Or we search the cneter of the sign (Octogon)
+    elif shape == 3 or shape== 5 or shape == 6 or shape == 7 or shape == 8:## Rectangle case
+        if number_of_sides != 4: # If the number of sides is not corresponding to the hoped shape ...
+            center_sign = None # ... We just take the center of the cropped sign
+        else:
+            center_sign = get_center_rectangle(img, contour_sign) # Or we search the center of the sign (to the bottom)
+    else: ## Circle or unrecognized shape case
+        center_sign = get_center_circle(img, contour_sign)
     return center_sign
 
 
-# Fonction de formatage
-def make_liste_contour(contour):
-    liste_pixels =[]
-    for pixel in contour:
-        x = pixel[0][0]
-        y = pixel[0][1]
-        coord = (x,y)
-        liste_pixels.append(coord)
-    return liste_pixels
-
-
-###### Cas des triangles (cas base en haut, et cas base en bas) ######### 
-
-def get_contour(img, edges, shape):
+def get_image_center(img):
+    """
+    Function that returns the center of the cropped image,
+    useful in the case of a not found sign contour.
     
-    if shape == 2 or shape == 4:
-        value_for_epsilon = 0.02
-    elif shape == 0 or shape ==1 or shape == 9 :
-        value_for_epsilon = 0.15
-    else:
-        value_for_epsilon = 0.15
-    # On trouve les contours dans l'image
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image of the sign
 
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    Returns
+    -------
+    center : tuple
+        Center of the cropped image, not of the sign.
+
+    """
+    height, width = img.shape[:2]
+    center_x = width // 2
+    center_y = height // 2
+    return (center_x, center_y)
+
+def get_center_triangle(img, contour_sign, boolean):
+    """
+    This function returns the center of a triangle detected in an image
+
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image of the sign.
+    contour_sign : ndarray
+        list of the points constituing the contour of the sign.
+    boolean : bool
+        Signify the orientation of the sign : to the top or to the bottom.
+
+    Returns
+    -------
+    center : tuple
+        center of the sign.
+
+    """
+    list_pixels = make_liste_contour(contour_sign) # Formatting function
     
-    # Approximer le contour avec un polygone
-    largest_contour = contours[0]
-    epsilon = value_for_epsilon * cv2.arcLength(largest_contour, True)
-    approx = cv2.approxPolyDP(largest_contour, epsilon, True)
-    # Déterminer le nombre de côtés du polygone
-    sides = len(approx)
-    # cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
-    # cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
-    #print("valeur de sides : ", sides)
-    which_circle(img, largest_contour)
-    cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
-    cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
-    return approx, sides
-
-def get_center_code_01(img, contour_sign, boolean):
-    liste_pixels = make_liste_contour(contour_sign)
-    # Récupérer la coordonnée avec le x minimum
-    coord_x_min = min(liste_pixels, key=lambda coord: coord[0])
-    coord_x_max = max(liste_pixels, key=lambda coord: coord[0])
+    # We get the coords of the vertex of the triangle
+    coord_x_min = min(list_pixels, key=lambda coord: coord[0])
+    coord_x_max = max(list_pixels, key=lambda coord: coord[0])
+    # The third vertex depends on the orientation of the sign
     if boolean == True:
-        coord_y_min = min(liste_pixels, key=lambda coord: coord[1])
+        coord_y_min = min(list_pixels, key=lambda coord: coord[1])
     elif boolean == False:
-        coord_y_min = max(liste_pixels, key=lambda coord: coord[1])
+        coord_y_min = max(list_pixels, key=lambda coord: coord[1])
     
+    # We calculate the center of the sign
     x = math.ceil((coord_x_min[0] + coord_x_max[0] + coord_y_min[0])/3)
     y = math.ceil((coord_x_min[1] + coord_x_max[1] + coord_y_min[1])/3)
     center = (x,y)
@@ -164,50 +223,172 @@ def get_center_code_01(img, contour_sign, boolean):
     plotting.show_image_triangle(img, coord_x_min, coord_x_max, coord_y_min, center)
     return center
 
-#### Cas de l'octogone ####
+def get_center_circle(img, contour):
+    """
+    This function returns the center of a circle detected in an image
 
-def get_center_code_2(img, contour):
-    liste_x = []
-    liste_y = []
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image of the sign.
+    contour : ndarray
+        list of the points constituing the contour of the sign.
+
+    Returns
+    -------
+    center : tuple
+        center of the sign.
+
+    """
+    list_x = []
+    list_y = []
     for point in contour:
         point = point[0]
-        liste_x.append(point[0])
-        liste_y.append(point[1])
-    moy_x = math.ceil(np.mean(liste_x))
-    moy_y = math.ceil(np.mean(liste_y))
-    center = (moy_x,moy_y)
+        list_x.append(point[0])
+        list_y.append(point[1])
+    mean_x = math.ceil(np.mean(list_x))
+    mean_y = math.ceil(np.mean(list_y))
+    center = (mean_x,mean_y)
     cv2.circle(img, center, 1, (0, 255, 0), -1)
-    plotting.show_image(img, title='Objects Detected')
+    #plotting.show_image(img, title='Objects Detected')
     return center
 
-def get_center_code_3(img, contour):
-    liste_pixels = make_liste_contour(contour)
-    # Récupérer la coordonnée avec le x minimum
-    coord_x_min = min(liste_pixels, key=lambda coord: coord[0])
-    coord_x_max = max(liste_pixels, key=lambda coord: coord[0])
-    coord_y_min = min(liste_pixels, key=lambda coord: coord[1])
-    coord_y_max = max(liste_pixels, key=lambda coord: coord[1])
+def get_center_rectangle(img, contour):
+    """
+    This function returns the center of a rectangle detected in an image
+
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image of the sign.
+    contour : ndarray
+        list of the points constituing the contour of the sign.
+
+    Returns
+    -------
+    center : tuple
+        center of the sign.
+
+    """
+    list_pixels = make_liste_contour(contour)
+    # Getting vertex of the rectangle
+    coord_x_min = min(list_pixels, key=lambda coord: coord[0])
+    coord_x_max = max(list_pixels, key=lambda coord: coord[0])
+    coord_y_min = min(list_pixels, key=lambda coord: coord[1])
+    coord_y_max = max(list_pixels, key=lambda coord: coord[1])
     
     x = math.ceil((coord_x_min[0] + coord_x_max[0] + coord_y_min[0] + coord_y_max[0])/4)
     y = math.ceil((coord_x_min[1] + coord_x_max[1] + coord_y_min[1] + coord_y_max[1])/4)
     center = (x,y)
+    # Getting the corners
     corners = []
     corners.append(coord_x_min)
     corners.append(coord_x_max)
     corners.append(coord_y_min)
     corners.append(coord_y_max)
     plotting.show_image_rectangle(img, corners, center)
+    
     return center
     
-def which_circle(img, contour):
-    # Calcul des coordonnées pour les pixels décalés
+def find_center_in_original_picture(img, center, x, y):
+    """
+    Function that returns the center of the sign, not in the
+    cropped image but in the original picture from the
+    Panoramax API
+
+    Parameters
+    ----------
+    img : np.ndarray
+        Original image of the sign.
+    center : tuple
+        Center of the sign calculated, in the cropped image.
+    x : int
+        Top left of the corner in the original image containing it.
+    y : int
+        Top left of the corner in the original image containing it.
+
+    Returns
+    -------
+    final_center : tuple
+        Center of the sign in the original image
+
+    """
+    final_x = x + center[0]
+    final_y = y + center[1]
+    return (final_x,final_y)
+
+
+def make_liste_contour(contour):
+    '''
+    Formatting function making a contour, which is a ndarray, a 
+    list more easy to deals with.
+    
+
+    Parameters
+    ----------
+    contour : np.ndarray
+        Closed polygon.
+
+    Returns
+    -------
+    liste_pixels : list
+        list of points constituing the polygon.
+
+    '''
+    list_pixels =[]
+    for pixel in contour:
+        x = pixel[0][0]
+        y = pixel[0][1]
+        coord = (x,y)
+        list_pixels.append(coord)
+    return list_pixels
+
+
+def get_sign_height(img, contour, shape):
+    """
+
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image containing the sign.
+    contour : ndarray
+        List of the points constituing the contour of the sign.
+    shape : int
+        Shape of the sign, encoded.
+
+    Returns
+    -------
+    height : float
+        Height of the sign in the image, in pixels.
+
+    """
+    if shape == 2 or shape == 4:
+        if number_of_sides < 8:
+            height = get_sign_height_circle(img, contour)
+        else:
+            height = None
+    elif shape == 0 or shape == 1 or shape == 9:
+        if number_of_sides == 3:
+            if shape == 0:
+                height = get_sign_height_triangle(img, contour, True)
+            else:
+                height = get_sign_height_triangle(img, contour, False)
+        else:
+            height = None
+    else:
+        if number_of_sides == 4:
+            height = get_sign_height_rectangle(img, contour)
+        else:
+            height = None
+    return height
+
+def get_sign_height_circle(img, contour):
     liste_pixels = make_liste_contour(contour)
 
     x_min = min(liste_pixels, key=lambda coord: coord[0])
     x_max = max(liste_pixels, key=lambda coord: coord[0])
     y_min = min(liste_pixels, key=lambda coord: coord[1])
     y_max = max(liste_pixels, key=lambda coord: coord[1])
-    #print("exemple de coordonnées : ", x_min)
     
     color1 = get_pixel_rgb(img, x_min[0] + 3, x_min[1])
     color2 = get_pixel_rgb(img, x_max[0] - 3, x_max[1])
@@ -226,110 +407,163 @@ def which_circle(img, contour):
         if R > C:
             verif.append(R)
     print("Les couleurs sont :", color1, color2, color3, color4)
-    if len(verif)>= 3:
-        h1 = np.sqrt((x_min[0] - x_max[0])**2 + (x_min[1] - x_max[1])**2)
-        h2 = np.sqrt((y_min[0] - y_max[0])**2 + (y_min[1] - y_max[1])**2)
-        h = (h1 + h2) / 2
-        return h
+    # if len(verif)>= 3:
+    #     h1 = np.sqrt((x_min[0] - x_max[0])**2 + (x_min[1] - x_max[1])**2)
+    #     h2 = np.sqrt((y_min[0] - y_max[0])**2 + (y_min[1] - y_max[1])**2)
+    #     h = (h1 + h2) / 2
+        # return h
+    # else:
+    #     get_hauteur_sign(img,x_min, x_max, y_min, y_max)
+    return x_min, x_max, y_min, y_max
+
+def get_sign_height_triangle(img, contour, boolean):
+    """
+    This tcheck what part of the sign the contour found and, depending on it,
+    throws to sign height calculation.
+
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image containing the sign.
+    contour : ndarray
+        List of the points constituing the contour of the sign.
+    boolean : bool
+        Signify the orientation of the triangle : to the top or to the left
+
+    Returns
+    -------
+    height_calculated : float
+        Height of the sign, in pixels.
+
+    """
+    list_pixels = make_liste_contour(contour)
+    # We get the coords of the vertex of the triangle
+    p1 = min(list_pixels, key=lambda coord: coord[0])
+    p2 = max(list_pixels, key=lambda coord: coord[0])
+    # The third vertex depends on the orientation of the sign
+    if boolean == True:
+        p3 = min(list_pixels, key=lambda coord: coord[1])
+        color3 = get_pixel_rgb(img, p3[0], p3[1] + 4)
+    elif boolean == False:
+        p3 = max(list_pixels, key=lambda coord: coord[1])
+        color3 = get_pixel_rgb(img, p3[0], p3[1] - 4)
+    
+    # Looking at the internals pixels colors to know if we have
+    # a intern or extern contour
+    color1 = get_pixel_rgb(img, p1[0] + 4, p1[1]-4)
+    color2 = get_pixel_rgb(img, p2[0] - 4, p2[1]-4)
+    
+    list_colors = (color1, color2, color3)
+    verif = []
+    for color in list_colors: # Tchecking the color
+        R = color[0]
+        G = color[1]
+        B = color[2]
+        C = int(G) + int(B)
+        if R > 0.75 * C:
+            verif.append(R)
+    if len(verif)>=2:
+        # Case of the extern contour
+        # We calculate the center of the base
+        x = math.ceil((p1[0] + p2[0])/2)
+        y = math.ceil((p1[1] + p2[1])/2)
+        p4 = (x,y)
+        height_calculated = distance(p3,p4)
     else:
-        get_hauteur_sign(img,x_min, x_max, y_min, y_max)
+        # Case of the intern contour
+        # TODO
+        height_calculated = None
+    return height_calculated
 
-def get_hauteur_sign(img, p1, p2, p3, p4):
-    gray = BGRtoGRAY(img)
-    IMGcanny = DetectionContours(gray)  # Utiliser Canny pour détecter les contours
-
-    # Calculer les coefficients des droites P1-P2 et P3-P4 (y = mx + c)
-    m1 = (p2[1] - p1[1]) / (p2[0] - p1[0])
-    c1 = p1[1] - m1 * p1[0]
-
-    m2 = (p4[1] - p3[1]) / (p4[0] - p3[0])
-    c2 = p3[1] - m2 * p3[0]
-
-    matrice_contours = np.zeros_like(IMGcanny)
-    # Remplacer les pixels de contour par 1
-    matrice_contours[IMGcanny > 0] = 1
-
-    # Parcourir chaque pixel de l'image
-    for y in range(img.shape[0]):
-        # Vérifier si le pixel valide l'une des deux équations de droite
-        
-        if (y - m1 * x - c1) * (y - m2 * x - c2) <= 0:
-            matrice_contours[y, x] = 2
-
-    # Enregistrer la matrice de contours dans un fichier texte
-    np.savetxt("matrice_contours.txt", matrice_contours, fmt='%d')
+def get_sign_height_rectangle(img, contour):
+    ### TODO ###
+    return None
 
 
-def get_pixel_rgb(image, row, col):
-    pixel_rgb = image[col, row]  # Assurez-vous d'utiliser les coordonnées dans l'ordre (colonne, ligne)
+def distance(point1, point2):
+    """
+    
+    This function returns the distance between two points
+    
+    Parameters
+    ----------
+    point1 : tuple
+        Point.
+    point2 : tuple
+        Point.
+
+    Returns
+    -------
+    TYPE: Float
+        Distance between the two points.
+
+    """
+    return np.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
+
+def get_pixel_rgb(img, row, col):
+    """
+    This function returns the color of a pixel, in RGB
+
+    Parameters
+    ----------
+    img : ndarray
+        Cropped sign image.
+    row : int
+        row identifiant.
+    col : int
+        Column identifiant.
+
+    Returns
+    -------
+    real_color : list
+        Color in RGB.
+
+    """
+    pixel_rgb = img[col, row]
     R = pixel_rgb[2]
-    V = pixel_rgb[1]
+    G = pixel_rgb[1]
     B = pixel_rgb[0]
     
-    real_color = [R,V,B]
+    real_color = [R,G,B]
     return real_color
 
 if __name__ == '__main__':
-    
-    #folder = "C:/Users/Myriam/Documents/IT3/Panoramax/TSI_panoramax/data_test"
+    # On importe et on lit le CSV
     dictionnaire_source = "panodico.csv"
     dico = csv_reader(dictionnaire_source)
     
-    folder = "./center_test"
-    dirs = os.listdir(folder)
+    folder = "./DATA_BASE_SIMULEE"
     
-    # This would print all the files and directories
-    tag = "B14"
-    count = 1
-    for file in dirs:
-        print("IMAGE ", count)
-        picture_path = "center_test/" + file
-       # print(picture_path)
-        img = cv2.imread(picture_path)
-        imgGray = BGRtoGRAY(img)
-        imgEdges = DetectionContours(imgGray)
-        shape = get_shape(tag, dico)
-        #print("shape = ", shape)
-        center_in_cropped = get_center_in_cropped_sign(img, shape, imgEdges)
-        #print("La valeur du centre : ", center_in_cropped)
-        w,h,x,y = extraction.get_whxy_from_img_path(picture_path)
-        final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
-        #print(final_center)
-        count +=1
+    dirs = os.listdir(folder)
+    for category in dirs: # On récupère chaque nom de dossier
+        print("CATEGORY ", category)
+        if category[:3] == "B14":
+            tag = "B14"
+        else:
+            tag = category
         
-    # folder = "/home/formation/Victorien/Projet_Panneau/detectcenter/trié2"
-    # source = "/home/formation/Victorien/TSI_panoramax/panneaux_data_limit_100.csv"
-    # data = pd.read_csv(source)
-    # # Créer une liste pour chaque ligne
-    # listes_lignes = data.values.tolist()
-    # dictionnaire_source = "/home/formation/Victorien/Projet_Panneau/Code_trouver_centre_panneau/panodico.csv"
-    # dico = csv_reader(dictionnaire_source)
-    # for element in listes_lignes:
-    #     tag = element[3]
-    #     if not math.isnan(element[4]):
-    #         picture_path = folder + "/"+tag + "-" + element[4] +"/" + element[2]
-    #     else:
-    #         picture_path = folder + "/"+tag+"/" + element[2]
-
-    #     img = cv2.imread(picture_path)
-    #     imgGray = BGRtoGRAY(img)
-    #     imgEdges = DetectionContours(imgGray)
-    #     shape = get_shape(tag, dico)
-    #     center_in_cropped = get_center_in_cropped_sign(img, shape, imgEdges)
-    #     print("La valeur du centre : ", center_in_cropped)
-    #     w,h,x,y = extraction.get_whxy_from_img_path(picture_path)
-    #     final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
-    #     print(final_center)
-    # Pour l'instant, nous allons travailler sur une seule photo, d'un triangle de type 0
-    #photo_path = "/home/formation/Victorien/Projet_Panneau/Code_trouver_centre_panneau/panotest2.jpg"
-    #tag = "B14"
-    # img = cv2.imread(photo_path)
-    # imgGray = BGRtoGRAY(img)
-    # imgEdges = DetectionContours(imgGray)
-    # shape = get_shape(tag, dico)
-    # center_in_cropped = get_center_in_cropped_sign(img, shape, imgEdges)
-    # print("La valeur du centre : ", center_in_cropped)
-    # w,h,x,y = extraction.get_whxy_from_img_path(photo_path)
-    # final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
-    # print(final_center)
-        
+        count = 1
+        workfolder = os.listdir(folder+ "/" + category) #On construit les chemins d'accès
+        for file in workfolder: # On parcourt chaque catégorie de panneau
+            print("  IMAGE - ", count)
+            picture_path = folder+ "/" + category + "/" + file
+            #print("PICTURE PATH ", picture_path)
+            img = cv2.imread(picture_path) # Reading the image with cv2
+            imgGray = BGRtoGRAY(img) # On la transforme en niveaux de gris
+            imgEdges = DetectionContours(imgGray) # Finding the contours of the image
+            shape = get_shape(tag, dico) # Getting the shape of the sign, according to the dictionnary
+            #print("SHAPE ", shape)
+            
+            approximated_polygon, number_of_sides = get_contour(img, imgEdges, shape)
+            center_in_cropped_sign = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
+            w,h,x,y = extraction.get_whxy_from_img_path(picture_path) # Getting the cropped sign informations
+            final_center = find_center_in_original_picture(img, center_in_cropped_sign, x, y) # Getting the center of the sign in the original image from panoramax
+            #print("FINAL CENTER ", final_center)
+            plotting.show_image(img, title='Objects Detected')
+            
+            height_sign = get_sign_height(img, approximated_polygon, shape) # Getting the height of the sign
+            
+            print("SIGN CENTER in cropped image : ", center_in_cropped_sign)
+            print("SIGN CENTER in original image : ", final_center)
+            print("SIGN HEIGHT : ", height_sign)
+            count += 1
