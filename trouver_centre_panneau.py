@@ -108,8 +108,8 @@ def get_contour(img, edges, shape):
     approx = cv2.approxPolyDP(largest_contour, epsilon, True) # Approximation
     sides = len(approx) # Number of sides of the polygon, to know if we found the good form
     # x_min, x_max, y_min, y_max = which_circle(img, largest_contour)
-    cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
-    cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
+    #cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
+    #cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
     return approx, sides
 
 
@@ -347,7 +347,6 @@ def make_liste_contour(contour):
 
 def get_sign_height(img, contour, shape):
     """
-    
 
     Parameters
     ----------
@@ -371,7 +370,10 @@ def get_sign_height(img, contour, shape):
             height = None
     elif shape == 0 or shape == 1 or shape == 9:
         if number_of_sides == 3:
-            height = get_sign_height_triangle(img, contour)
+            if shape == 0:
+                height = get_sign_height_triangle(img, contour, True)
+            else:
+                height = get_sign_height_triangle(img, contour, False)
         else:
             height = None
     else:
@@ -382,14 +384,12 @@ def get_sign_height(img, contour, shape):
     return height
 
 def get_sign_height_circle(img, contour):
-    # Calcul des coordonnées pour les pixels décalés
     liste_pixels = make_liste_contour(contour)
 
     x_min = min(liste_pixels, key=lambda coord: coord[0])
     x_max = max(liste_pixels, key=lambda coord: coord[0])
     y_min = min(liste_pixels, key=lambda coord: coord[1])
     y_max = max(liste_pixels, key=lambda coord: coord[1])
-    #print("exemple de coordonnées : ", x_min)
     
     color1 = get_pixel_rgb(img, x_min[0] + 3, x_min[1])
     color2 = get_pixel_rgb(img, x_max[0] - 3, x_max[1])
@@ -416,11 +416,33 @@ def get_sign_height_circle(img, contour):
     # else:
     #     get_hauteur_sign(img,x_min, x_max, y_min, y_max)
     return x_min, x_max, y_min, y_max
-    ### TODO ###
-    return None
 
-def get_sign_height_triangle(img, contour):
-    ### TODO ###
+def get_sign_height_triangle(img, contour, boolean):
+    list_pixels = make_liste_contour(contour)
+    # We get the coords of the vertex of the triangle
+    p1 = min(list_pixels, key=lambda coord: coord[0])
+    p2 = max(list_pixels, key=lambda coord: coord[0])
+    # The third vertex depends on the orientation of the sign
+    if boolean == True:
+        p3 = min(list_pixels, key=lambda coord: coord[1])
+    elif boolean == False:
+        p3 = max(list_pixels, key=lambda coord: coord[1])
+    
+    # Looking at the internals pixels colors to know if we have
+    # a intern or extern contour
+    color1 = get_pixel_rgb(img, p1[0] + 5, p1[1]-5)
+    color2 = get_pixel_rgb(img, p2[0] - 5, p2[1]-5)
+    color3 = get_pixel_rgb(img, p3[0], p3[1] + 5)
+    list_colors = (color1, color2, color3)
+    verif = []
+    for color in list_colors: # Tchecking the color
+        R = color[0]
+        G = color[1]
+        B = color[2]
+        C = int(G) + int(B)
+        if R > 0.75 * C:
+            verif.append(R)
+    print("verif", verif)
     return None
 
 def get_sign_height_rectangle(img, contour):
@@ -467,7 +489,7 @@ def get_pixel_rgb(img, row, col):
         Color in RGB.
 
     """
-    pixel_rgb = img[col, row]  # Assurez-vous d'utiliser les coordonnées dans l'ordre (colonne, ligne)
+    pixel_rgb = img[col, row]
     R = pixel_rgb[2]
     G = pixel_rgb[1]
     B = pixel_rgb[0]
@@ -493,20 +515,25 @@ if __name__ == '__main__':
         count = 1
         workfolder = os.listdir(folder+ "/" + category) #On construit les chemins d'accès
         for file in workfolder: # On parcourt chaque catégorie de panneau
-            print("IMAGE ", count)
+            print("  IMAGE - ", count)
             picture_path = folder+ "/" + category + "/" + file
             #print("PICTURE PATH ", picture_path)
             img = cv2.imread(picture_path) # Reading the image with cv2
             imgGray = BGRtoGRAY(img) # On la transforme en niveaux de gris
             imgEdges = DetectionContours(imgGray) # Finding the contours of the image
             shape = get_shape(tag, dico) # Getting the shape of the sign, according to the dictionnary
-            print("SHAPE ", shape)
+            #print("SHAPE ", shape)
             
             approximated_polygon, number_of_sides = get_contour(img, imgEdges, shape)
-            center = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
+            center_in_cropped_sign = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
             w,h,x,y = extraction.get_whxy_from_img_path(picture_path) # Getting the cropped sign informations
-            final_center = find_center_in_original_picture(img, center, x, y)
-            print("FINAL CENTER ", final_center)
+            final_center = find_center_in_original_picture(img, center_in_cropped_sign, x, y) # Getting the center of the sign in the original image from panoramax
+            #print("FINAL CENTER ", final_center)
             plotting.show_image(img, title='Objects Detected')
-            height_sign = get_sign_height(img, approximated_polygon, shape)
+            
+            height_sign = get_sign_height(img, approximated_polygon, shape) # Getting the height of the sign
+            
+            print("SIGN CENTER in cropped image : ", center_in_cropped_sign)
+            print("SIGN CENTER in original image : ", final_center)
+            print("SIGN HEIGHT : ", height_sign)
             count += 1
