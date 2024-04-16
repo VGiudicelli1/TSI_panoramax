@@ -139,24 +139,24 @@ def get_center_in_cropped_sign(img, shape, imgEdges, contour_sign, number_of_sid
     """
     if shape == 0: ## Triangle-top case
         if number_of_sides != 3: # If the number of sides is not corresponding to the hoped shape ...
-            center_sign = None# ... We just take the center of the cropped sign
+            center_sign = None # ... We just take the center of the cropped sign
         else:
             center_sign = get_center_triangle(img, contour_sign, True) # Or we search the center of the sign (to the top)
             
     elif shape == 1 or shape == 9: ## Triangle-bottom case
         if number_of_sides != 3: # If the number of sides is not corresponding to the hoped shape ...
-            center_sign = None# ...  We just take the center of the cropped sign
+            center_sign = None # ...  We just take the center of the cropped sign
         else:
             center_sign = get_center_triangle(img, contour_sign, False) # Or we search the center of the sign (to the bottom)
     
     elif shape == 2 :## Octogon case
         if number_of_sides != 8: # If the number of sides is not corresponding to the hoped shape ...
-            center_sign = None# ... We just take the center of the cropped sign
+            center_sign = None # ... We just take the center of the cropped sign
         else:
             center_sign = get_center_circle(img, contour_sign) #  Or we search the cneter of the sign (Octogon)
     elif shape == 3 or shape== 5 or shape == 6 or shape == 7 or shape == 8:## Rectangle case
         if number_of_sides != 4: # If the number of sides is not corresponding to the hoped shape ...
-            center_sign = None# ... We just take the center of the cropped sign
+            center_sign = None # ... We just take the center of the cropped sign
         else:
             center_sign = get_center_rectangle(img, contour_sign) # Or we search the center of the sign (to the bottom)
     else: ## Circle or unrecognized shape case
@@ -166,7 +166,6 @@ def get_center_in_cropped_sign(img, shape, imgEdges, contour_sign, number_of_sid
 
 def get_image_center(img):
     """
-    
     Function that returns the center of the cropped image,
     useful in the case of a not found sign contour.
     
@@ -418,6 +417,25 @@ def get_sign_height_circle(img, contour):
     return x_min, x_max, y_min, y_max
 
 def get_sign_height_triangle(img, contour, boolean):
+    """
+    This tcheck what part of the sign the contour found and, depending on it,
+    throws to sign height calculation.
+
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image containing the sign.
+    contour : ndarray
+        List of the points constituing the contour of the sign.
+    boolean : bool
+        Signify the orientation of the triangle : to the top or to the left
+
+    Returns
+    -------
+    height_calculated : float
+        Height of the sign, in pixels.
+
+    """
     list_pixels = make_liste_contour(contour)
     # We get the coords of the vertex of the triangle
     p1 = min(list_pixels, key=lambda coord: coord[0])
@@ -425,14 +443,16 @@ def get_sign_height_triangle(img, contour, boolean):
     # The third vertex depends on the orientation of the sign
     if boolean == True:
         p3 = min(list_pixels, key=lambda coord: coord[1])
+        color3 = get_pixel_rgb(img, p3[0], p3[1] + 4)
     elif boolean == False:
         p3 = max(list_pixels, key=lambda coord: coord[1])
+        color3 = get_pixel_rgb(img, p3[0], p3[1] - 4)
     
     # Looking at the internals pixels colors to know if we have
     # a intern or extern contour
-    color1 = get_pixel_rgb(img, p1[0] + 5, p1[1]-5)
-    color2 = get_pixel_rgb(img, p2[0] - 5, p2[1]-5)
-    color3 = get_pixel_rgb(img, p3[0], p3[1] + 5)
+    color1 = get_pixel_rgb(img, p1[0] + 4, p1[1]-4)
+    color2 = get_pixel_rgb(img, p2[0] - 4, p2[1]-4)
+    
     list_colors = (color1, color2, color3)
     verif = []
     for color in list_colors: # Tchecking the color
@@ -442,8 +462,18 @@ def get_sign_height_triangle(img, contour, boolean):
         C = int(G) + int(B)
         if R > 0.75 * C:
             verif.append(R)
-    print("verif", verif)
-    return None
+    if len(verif)>=2:
+        # Case of the extern contour
+        # We calculate the center of the base
+        x = math.ceil((p1[0] + p2[0])/2)
+        y = math.ceil((p1[1] + p2[1])/2)
+        p4 = (x,y)
+        height_calculated = distance(p3,p4)
+    else:
+        # Case of the intern contour
+        # TODO
+        height_calculated = None
+    return height_calculated
 
 def get_sign_height_rectangle(img, contour):
     ### TODO ###
