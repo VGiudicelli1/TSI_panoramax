@@ -49,12 +49,49 @@ def DetectionContours(imgGray):
 
 
 def find_center_in_original_picture(img, center, x, y):
+    """
+    Function that returns the center of the sign, not in the
+    cropped image but in the original picture from the
+    Panoramax API
+
+    Parameters
+    ----------
+    img : np.ndarray
+        Original image of the sign.
+    center : tuple
+        Center of the sign calculated, in the cropped image.
+    x : int
+        Top left of the corner in the original image containing it.
+    y : int
+        Top left of the corner in the original image containing it.
+
+    Returns
+    -------
+    final_center : tuple
+        Center of the sign in the original image
+
+    """
     final_x = x + center[0]
     final_y = y + center[1]
-    final_center = (final_x,final_y)
-    return final_center
+    return (final_x,final_y)
 
 def get_image_center(img):
+    """
+    
+    Function that returns the center of the cropped image,
+    useful in the case of a not found sign contour.
+    
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image of the sign
+
+    Returns
+    -------
+    center : tuple
+        Center of the cropped image, not of the sign.
+
+    """
     height, width = img.shape[:2]
     #print('height', height)
     #print('width', width)
@@ -104,11 +141,27 @@ def get_center_in_cropped_sign(img, shape, imgEdges):
             center_sign = get_center_code_3(img, contour_sign[0]) # Sinon on cherche le milieu du triangle à l'endroit.
     else:
         center_sign = get_center_code_2(img, contour_sign[0])
-    return center_sign
+    return center_sign, contour_sign
 
 
 # Fonction de formatage
 def make_liste_contour(contour):
+    '''
+    Formatting function making a contour, which is a ndarray, a 
+    list more easy to deals with.
+    
+
+    Parameters
+    ----------
+    contour : np.ndarray
+        Closed polygon.
+
+    Returns
+    -------
+    liste_pixels : list
+        list of points constituing the polygon.
+
+    '''
     liste_pixels =[]
     for pixel in contour:
         x = pixel[0][0]
@@ -142,10 +195,10 @@ def get_contour(img, edges, shape):
     # cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
     # cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
     #print("valeur de sides : ", sides)
-    which_circle(img, largest_contour)
+    x_min, x_max, y_min, y_max = which_circle(img, largest_contour)
     cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
     cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
-    return approx, sides
+    return approx, sides, x_min, x_max, y_min, y_max
 
 def get_center_code_01(img, contour_sign, boolean):
     liste_pixels = make_liste_contour(contour_sign)
@@ -177,7 +230,7 @@ def get_center_code_2(img, contour):
     moy_y = math.ceil(np.mean(liste_y))
     center = (moy_x,moy_y)
     cv2.circle(img, center, 1, (0, 255, 0), -1)
-    plotting.show_image(img, title='Objects Detected')
+    #plotting.show_image(img, title='Objects Detected')
     return center
 
 def get_center_code_3(img, contour):
@@ -226,39 +279,112 @@ def which_circle(img, contour):
         if R > C:
             verif.append(R)
     print("Les couleurs sont :", color1, color2, color3, color4)
-    if len(verif)>= 3:
-        h1 = np.sqrt((x_min[0] - x_max[0])**2 + (x_min[1] - x_max[1])**2)
-        h2 = np.sqrt((y_min[0] - y_max[0])**2 + (y_min[1] - y_max[1])**2)
-        h = (h1 + h2) / 2
-        return h
-    else:
-        get_hauteur_sign(img,x_min, x_max, y_min, y_max)
+    # if len(verif)>= 3:
+    #     h1 = np.sqrt((x_min[0] - x_max[0])**2 + (x_min[1] - x_max[1])**2)
+    #     h2 = np.sqrt((y_min[0] - y_max[0])**2 + (y_min[1] - y_max[1])**2)
+    #     h = (h1 + h2) / 2
+        # return h
+    # else:
+    #     get_hauteur_sign(img,x_min, x_max, y_min, y_max)
+    return x_min, x_max, y_min, y_max
 
-def get_hauteur_sign(img, p1, p2, p3, p4):
+def get_hauteur_sign(img, center, x_min, x_max, y_min, y_max):
     gray = BGRtoGRAY(img)
     IMGcanny = DetectionContours(gray)  # Utiliser Canny pour détecter les contours
+    plotting.show_image(IMGcanny, "Image grise")
+    
 
     # Calculer les coefficients des droites P1-P2 et P3-P4 (y = mx + c)
-    m1 = (p2[1] - p1[1]) / (p2[0] - p1[0])
-    c1 = p1[1] - m1 * p1[0]
+    m1 = (x_max[1] - x_min[1]) / (x_max[0] - x_min[0])
+    c1 = x_min[1] - m1 * x_min[0]
 
-    m2 = (p4[1] - p3[1]) / (p4[0] - p3[0])
-    c2 = p3[1] - m2 * p3[0]
+    m2 = (y_max[1] - y_min[1]) / (y_max[0] - y_min[0])
+    c2 = y_min[1] - m2 * y_min[0]
 
     matrice_contours = np.zeros_like(IMGcanny)
     # Remplacer les pixels de contour par 1
     matrice_contours[IMGcanny > 0] = 1
+    
 
-    # Parcourir chaque pixel de l'image
-    for y in range(img.shape[0]):
-        # Vérifier si le pixel valide l'une des deux équations de droite
-        
-        if (y - m1 * x - c1) * (y - m2 * x - c2) <= 0:
-            matrice_contours[y, x] = 2
+# =============================================================================
+#     # Parcourir chaque colonne de l'image
+#     for x in range(img.shape[1]):
+#         # Calculer les coordonnées y correspondantes pour chaque droite
+#         y1 = m1 * x + c1
+#         y2 = m2 * x + c2
+# 
+#         # Vérifier si les coordonnées y sont valides dans l'image
+#         if 0 <= y1 < img.shape[0]:
+#             matrice_contours[int(y1), x] +=1
+#         if 0 <= y2 < img.shape[0]:
+#             matrice_contours[int(y2), x] +=1
+# 
+#     
+#     # Enregistrer la matrice de contours dans un fichier texte
+#     P1prime, P2prime, P3prime, P4prime = get_extremity_points(matrice_contours)
+#     
+#     distance_P1_P1prime = distance(x_min, P1prime)
+#     distance_P2_P2prime = distance(x_max, P2prime)
+#     distance_P3_P3prime = distance(y_min, P3prime)
+#     distance_P4_P4prime = distance(y_max, P4prime)
+#     distances = [distance_P1_P1prime, distance_P2_P2prime, distance_P3_P3prime, distance_P4_P4prime]
+#     
+#     print(P1prime, x_min)
+#     
+#     cv2.circle(img, P1prime, 5, (0, 255, 0), -1)  # Dessiner un cercle plein
+#     cv2.circle(img, P2prime, 5, (0, 255, 0), -1)  # Dessiner un cercle plein
+#     cv2.circle(img, P3prime, 5, (0, 255, 0), -1)  # Dessiner un cercle plein
+#     cv2.circle(img, P4prime, 5, (0, 255, 0), -1)  # Dessiner un cercle plein
+# =============================================================================
+    
+    # Recherche des points situés sur le cercle extérieur
+    # Distance de pixel sur lequel regarder
+    d_pixel = 5
+    p_left = (x_min[0] - d_pixel, x_min[1])
+    p_right = (x_max[0] + 10, x_max[1])
+    p_down = (y_min[0], y_min[1] - 10)
+    p_up = (y_max[0], y_max[1] + 10)
 
-    # Enregistrer la matrice de contours dans un fichier texte
+    cv2.circle(img, p_left, 5, (255, 0, 255), -1)  # Rose
+    cv2.circle(img, p_right, 5, (255, 255, 0), -1)  # Bleu
+    cv2.circle(img, p_down, 5, (0, 255, 255), -1)  # Jaune
+    cv2.circle(img, p_up, 5, (255, 255, 255), -1)  # Blanc
+
+    cv2.circle(img, x_min, 5, (255, 0, 255), -1)  # Rose
+    cv2.circle(img, x_max, 5, (255, 255, 0), -1)  # Bleu
+    cv2.circle(img, y_min, 5, (0, 255, 255), -1)  # Jaune
+    cv2.circle(img, y_max, 5, (255, 255, 255), -1)  # Blanc
+    
     np.savetxt("matrice_contours.txt", matrice_contours, fmt='%d')
 
+def get_extremity_points(matrice_contours):
+    # Initialisation des coordonnées des points extrémités
+    xmin_point = None
+    xmax_point = None
+    ymin_point = None
+    ymax_point = None
+
+    # Parcourir tous les pixels de la matrice
+    for y in range(matrice_contours.shape[0]):
+        for x in range(matrice_contours.shape[1]):
+            # Vérifier si le pixel a la valeur 2
+            if matrice_contours[y, x] == 2:
+                # Si c'est le cas, vérifier s'il est à l'un des bords de l'image
+                if xmin_point is None or x < xmin_point[0]:
+                    xmin_point = (x, y)
+                if xmax_point is None or x > xmax_point[0]:
+                    xmax_point = (x, y)
+                if ymin_point is None or y < ymin_point[1]:
+                    ymin_point = (x, y)
+                if ymax_point is None or y > ymax_point[1]:
+                    ymax_point = (x, y)
+
+    return xmin_point, xmax_point, ymin_point, ymax_point
+
+
+def distance(point1, point2):
+    # Calcul de la distance euclidienne entre deux points
+    return np.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
 
 def get_pixel_rgb(image, row, col):
     pixel_rgb = image[col, row]  # Assurez-vous d'utiliser les coordonnées dans l'ordre (colonne, ligne)
@@ -282,20 +408,24 @@ if __name__ == '__main__':
     tag = "B14"
     count = 1
     for file in dirs:
-        print("IMAGE ", count)
-        picture_path = "center_test/" + file
-       # print(picture_path)
-        img = cv2.imread(picture_path)
-        imgGray = BGRtoGRAY(img)
-        imgEdges = DetectionContours(imgGray)
-        shape = get_shape(tag, dico)
-        #print("shape = ", shape)
-        center_in_cropped = get_center_in_cropped_sign(img, shape, imgEdges)
-        #print("La valeur du centre : ", center_in_cropped)
-        w,h,x,y = extraction.get_whxy_from_img_path(picture_path)
-        final_center = find_center_in_original_picture(img, center_in_cropped, x, y)
-        #print(final_center)
-        count +=1
+         print("IMAGE ", count)
+         picture_path = "center_test/" + file
+        # print(picture_path)
+         img = cv2.imread(picture_path)
+         imgGray = BGRtoGRAY(img)
+         imgEdges = DetectionContours(imgGray)
+         shape = get_shape(tag, dico)
+         #print("shape = ", shape)
+         center, contour_sign = get_center_in_cropped_sign(img, shape, imgEdges)
+         (_, _, x_min, x_max, y_min, y_max) = contour_sign
+         #print("La valeur du centre : ", center_in_cropped)
+         get_hauteur_sign(img, center, x_min, x_max, y_min, y_max)
+         
+         w,h,x,y = extraction.get_whxy_from_img_path(picture_path)
+         final_center = find_center_in_original_picture(img, center, x, y)
+         #print(final_center)
+         count +=1
+         plotting.show_image(img, title='Objects Detected')
         
     # folder = "/home/formation/Victorien/Projet_Panneau/detectcenter/trié2"
     # source = "/home/formation/Victorien/TSI_panoramax/panneaux_data_limit_100.csv"
