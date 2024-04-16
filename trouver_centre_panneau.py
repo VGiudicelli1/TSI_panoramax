@@ -198,7 +198,7 @@ def get_contour(img, edges, shape):
     x_min, x_max, y_min, y_max = which_circle(img, largest_contour)
     cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
     cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
-    return approx, sides, x_min, x_max, y_min, y_max
+    return approx, sides
 
 def get_center_code_01(img, contour_sign, boolean):
     liste_pixels = make_liste_contour(contour_sign)
@@ -417,9 +417,7 @@ if __name__ == '__main__':
          shape = get_shape(tag, dico)
          #print("shape = ", shape)
          center, contour_sign = get_center_in_cropped_sign(img, shape, imgEdges)
-         (_, _, x_min, x_max, y_min, y_max) = contour_sign
          #print("La valeur du centre : ", center_in_cropped)
-         get_hauteur_sign(img, center, x_min, x_max, y_min, y_max)
          
          w,h,x,y = extraction.get_whxy_from_img_path(picture_path)
          final_center = find_center_in_original_picture(img, center, x, y)
