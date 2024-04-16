@@ -344,7 +344,7 @@ def make_liste_contour(contour):
     return list_pixels
 
 
-def get_sign_height(img, contour, shape):
+def get_sign_height(img, contour, shape, tag):
     """
 
     Parameters
@@ -377,7 +377,7 @@ def get_sign_height(img, contour, shape):
             height = None
     else:
         if number_of_sides == 4:
-            height = get_sign_height_rectangle(img, contour)
+            height = get_sign_height_rectangle(img, contour, tag)
         else:
             height = None
     return height
@@ -418,7 +418,7 @@ def get_sign_height_circle(img, contour):
 
 def get_sign_height_triangle(img, contour, boolean):
     """
-    This tcheck what part of the sign the contour found and, depending on it,
+    This function checks what part of the sign the contour found and, depending on it,
     throws to sign height calculation.
 
     Parameters
@@ -475,9 +475,19 @@ def get_sign_height_triangle(img, contour, boolean):
         height_calculated = None
     return height_calculated
 
-def get_sign_height_rectangle(img, contour):
-    ### TODO ###
-    return None
+def get_sign_height_rectangle(img, contour, tag):
+    list_pixels = make_liste_contour(contour)
+    signs_to_check = ["EB10", "CE22", "CE16", "CE14", "CE3a", "CE2e", "AB6", "AB7"]
+    top_left = min(list_pixels, key=lambda p: p[0] + p[1])
+    top_right = max(list_pixels, key=lambda p: (p[0], -p[1]))
+    bottom_left = min(list_pixels, key=lambda p: (p[0], -p[1]))
+    bottom_right = max(list_pixels, key=lambda p: p[0] + p[1])
+    if tag in signs_to_check:
+        #TODO
+        return None
+    else:
+        height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2    
+    return height_calculated
 
 
 def distance(point1, point2):
@@ -561,7 +571,7 @@ if __name__ == '__main__':
             #print("FINAL CENTER ", final_center)
             plotting.show_image(img, title='Objects Detected')
             
-            height_sign = get_sign_height(img, approximated_polygon, shape) # Getting the height of the sign
+            height_sign = get_sign_height(img, approximated_polygon, shape, tag) # Getting the height of the sign
             
             print("SIGN CENTER in cropped image : ", center_in_cropped_sign)
             print("SIGN CENTER in original image : ", final_center)
