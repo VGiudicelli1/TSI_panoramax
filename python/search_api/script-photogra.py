@@ -64,8 +64,8 @@ if __name__ == "__main__":
 		
 		# Empty the folder
 		for item in os.listdir(savePicturePath):
-			itemPath = os.path.join(savePicturePath, item)
-			os.remove(itemPath)
+ 			itemPath = os.path.join(savePicturePath, item)
+ 			os.remove(itemPath)
 	
 	# Save the log into a log file
 	with open(os.path.join(logPath, "logFileSignDetection.txt"), 'w') as f:
