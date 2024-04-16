@@ -2,7 +2,6 @@ import psycopg2
 
 log = print
 
-
 def getConnection(host,
 				  user="postgres",
 				  password="postgres",
@@ -37,7 +36,6 @@ def getConnection(host,
 								  port=port,
 								  database=database)
 	return connection
-
 
 def insertQuery(connection, query):
 	"""
@@ -98,6 +96,38 @@ def selectAll(connection, table, limit=-1):
 	if limit > -1:
 		query += " LIMIT {}".format(limit)
 	cursor = connection.cursor()
+	try:
+		# Execute the query
+		cursor.execute(query)
+	except Exception as e:
+		log("The following error occured :", e)
+	finally:
+		return cursor
+
+def selectItemById(connection, itemId, table):
+	"""
+	Select an item of a table by its column "id". The item can be whatever is 
+	represented in the table parameter.
+
+	Parameters
+	----------
+	connection : psycopg2.extensions.connection
+		Database connection token.
+	itemId : str
+		Id of the item. An integer can also be given
+	table : str
+		Name of the table containing the item.
+
+	Returns
+	-------
+	isInDB : bool
+		True if the picture is already saved into the database.
+
+	"""
+	# Creation of the query
+	query = "SELECT * FROM {} WHERE id = '{}'".format(table, itemId)
+	cursor = connection.cursor()
+	
 	try:
 		# Execute the query
 		cursor.execute(query)
@@ -189,78 +219,6 @@ def getPathFromRow(row, columns):
 		path = "{}/{}".format(code, filename)
 	
 	return path
-
-def croppedSignInDatabase(connection, filename, table = "cropped_sign"):
-	"""
-	Return true if the cropped sign is already in the database.
-	It is based on the cropped sign filename.
-
-	Parameters
-	----------
-	connection : psycopg2.extensions.connection
-		Database connection token.
-	filename : str
-		Filename of the cropped sign.
-	table : str, optional
-		Name of the cropped signs table. The default is "cropped_sign".
-
-	Returns
-	-------
-	isInDB : bool
-		True if the cropped sign is already saved into the database.
-
-	"""
-	# Create and execute the query
-	query = """SELECT * FROM {}
-		WHERE filename = '{}';""".format(table, filename)
-	
-	cursor = connection.cursor()
-	cursor.execute(query)
-	
-	# Check the number of rows
-	isInDB = (cursor.rowcount > 0)
-	
-	if cursor.rowcount > 1:
-		log("Warning : {} items has the following filename : {}"
-	  .format(cursor.rowcount, filename))
-	
-	# Close the cursor
-	cursor.close()
-	
-	return isInDB
-
-def itemAlreadyInDatabase(connection, itemId, table):
-	"""
-	Return true if the item id is already saved in the table.
-
-	Parameters
-	----------
-	connection : psycopg2.extensions.connection
-		Database connection token.
-	itemId : str
-		Id of the item.
-	table : str
-		Name of the table containing the item.
-
-	Returns
-	-------
-	isInDB : bool
-		True if the picture is already saved into the database.
-
-	"""
-	# Create and execute the query
-	query = "SELECT * FROM {} WHERE id = '{}'".format(table, itemId)
-	cursor = connection.cursor()
-	cursor.execute(query)
-	
-	# Check the number of rows
-	isInDB = (cursor.rowcount > 0)
-	
-	# Close the cursor
-	cursor.close()
-	
-	return isInDB
-
 
 def updateCenterOfSign(connection, id, x, y, dz, table = "cropped_sign"):
 	"""
