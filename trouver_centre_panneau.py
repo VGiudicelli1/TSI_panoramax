@@ -15,7 +15,7 @@ import plotting
 import extraction
 import pandas as pd
 import os
-
+from scipy.spatial import ConvexHull
 
 def csv_reader(path):
     """
@@ -108,8 +108,8 @@ def get_contour(img, edges, shape):
     approx = cv2.approxPolyDP(largest_contour, epsilon, True) # Approximation
     sides = len(approx) # Number of sides of the polygon, to know if we found the good form
     # x_min, x_max, y_min, y_max = which_circle(img, largest_contour)
-    #cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
-    #cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
+    cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
+    cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
     return approx, sides
 
 
@@ -626,6 +626,37 @@ def get_pixel_rgb(img, row, col):
     real_color = [R,G,B]
     return real_color
 
+
+def is_the_sign_treatable(img, contour, number_of_sides, shape):
+    if number_of_sides>20:
+        return False
+    list_points = make_liste_contour(contour)
+    sign_area = area_of_point_cloud(list_points)
+    height, width, _ = img.shape
+    img_area = height * width
+    print("les aires : ", sign_area, img_area)
+    if sign_area < 0.05 * img_area:
+        return False
+    else:
+        return True
+    
+def area_of_point_cloud(points):
+    points_array = np.array(points)
+    # Calcul de l'enveloppe convexe
+    hull = ConvexHull(points_array)
+    
+    # Récupération des indices des points formant l'enveloppe convexe
+    indices = hull.vertices
+    
+    # Sélection des points de l'enveloppe convexe
+    convex_hull_points = points_array[indices]
+    
+    # Calcul de l'aire de l'enveloppe convexe
+    area = 0.5 * np.abs(np.dot(convex_hull_points[:, 0], np.roll(convex_hull_points[:, 1], 1)) - 
+                        np.dot(convex_hull_points[:, 1], np.roll(convex_hull_points[:, 0], 1)))
+    
+    return area
+
 if __name__ == '__main__':
     # On importe et on lit le CSV
     dictionnaire_source = "panodico.csv"
@@ -645,6 +676,7 @@ if __name__ == '__main__':
         workfolder = os.listdir(folder+ "/" + category) #On construit les chemins d'accès
         for file in workfolder: # On parcourt chaque catégorie de panneau
             print("  IMAGE - ", count)
+            count += 1
             picture_path = folder+ "/" + category + "/" + file
             #print("PICTURE PATH ", picture_path)
             img = cv2.imread(picture_path) # Reading the image with cv2
@@ -655,14 +687,18 @@ if __name__ == '__main__':
             
             approximated_polygon, number_of_sides = get_contour(img, imgEdges, shape)
             center_in_cropped_sign = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
+            istreatable = is_the_sign_treatable(img, approximated_polygon, number_of_sides, shape)
+            plotting.show_image(img, title='Objects Detected')
+            if not istreatable:
+                print("Ce panneau ne peut pas être traité")
+                continue
             w,h,x,y = extraction.get_whxy_from_img_path(picture_path) # Getting the cropped sign informations
             final_center = find_center_in_original_picture(img, center_in_cropped_sign, x, y) # Getting the center of the sign in the original image from panoramax
             #print("FINAL CENTER ", final_center)
-            plotting.show_image(img, title='Objects Detected')
+            #plotting.show_image(img, title='Objects Detected')
             
             height_sign = get_sign_height(img, approximated_polygon, shape, tag) # Getting the height of the sign
             
             print("SIGN CENTER in cropped image : ", center_in_cropped_sign)
             print("SIGN CENTER in original image : ", final_center)
             print("SIGN HEIGHT : ", height_sign)
-            count += 1
