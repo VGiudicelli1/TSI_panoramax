@@ -1,7 +1,6 @@
 import cv2 
 from PIL import Image
 import json
-import pyexiv2
 
 def get_whxy_from_img_path(image_path):
     """
