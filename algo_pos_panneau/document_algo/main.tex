@@ -1,0 +1,115 @@
+\documentclass{article}
+
+\usepackage{amsfonts}
+\usepackage{mathrsfs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+
+\usepackage{geometry}
+\geometry{hmargin=2.5cm,vmargin=1.5cm}
+
+\title{...}
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+Note: les angles sont donnés dans le sens horaire par rapport au nord. On suppose travailler dans une projection qui induise localement des déformations négligeables 
+\section{Algorithme de clusterisation}
+
+\subsection{Définition}
+
+Soit l'espace \(\mathbb{E} = \mathbb{R}^{2} \times \mathbb{R}_{+}\) des panneaux possibles, où chaque panneau \(p\) est défini par ses coordonnées \((e, n) \in \mathbb{R}^{2}\) et sa taille \(s \in \mathbb{R}_{+}\)
+
+Une détection de panneau est un segment \(\mathscr{D} \subset \mathbb{E}\). \(\mathscr{D}\) est induit par les coordoonées de la prise de vue \(e_0, n_0\), la direction du panneau \(\alpha\) et un facteur d'echelle \(sdf\) (size dist factor). La taille d'un panneau de signalisation varie entre 400mm et 1500mm. \[Gen_D : (e_0, n_0, \alpha, sdf) \in \mathbb{R}^{2}\times\mathbb{R}/2\pi\times\mathbb{R}_{+} \mapsto \mathscr{D} = \left\{ p = \begin{pmatrix}e_0 + s\times sdf \times \sin \alpha \\ n_0 + s \times sdf \times \cos \alpha \\ s \end{pmatrix}, s \in [0.1, 2]\right\}\]
+
+Notons \(\mathscr{A} = \{ \mathscr{D} \subset \mathbb{E} \}\) l'ensemble des détections de panneaux.
+
+\subsubsection{Fonction de compatibilité}
+\label{def_f_compat}
+On dispose d'une fonction de compatibilité \(f_{compat}: E \subset \mathscr{A} \to \left\{\begin{aligned}0&\text{:non}\\ 1&\text{:peut-être}\end{aligned}\right\}\) qui réponds à la question \textit{est-ce que ces détections correspondent au même panneau?}. Cette fonction tien compte d'autres paramètres tels que le code du panneau (différenciation selon si c'est un panneau stop, une limitation de vitesse, ...), de la valeur (limitation 50, limitation 30, ...), de l'orientation, ...
+
+Cette fonction vérifie la propriété de compabilité élémentaire suivante: un ensemple est compatible ssi tout ses éléments sont deux à deux compatibles. 
+\[
+\forall \Omega, f_{compat}(\Omega)=1 \Longleftrightarrow \forall (x,y) \in \Omega^{2}, f_{compat}(\{x, y\})=1
+\]
+Cette propriété est nécessaire pour réduire la complexité de l'algorithme. En effet, elle permet de ne tester les panneaux que deux à deux (complexité en \(n^{2} \times \Theta(f_{compat})\)), et ne nécessite pas de la tester sur l'ensemble des sous-ensembles de panneaux (complexité en \(2^{n} \times \Theta(f_{compat})\). Cependant, cette propriété est assez contraignante pour la fonction (voir \ref{ex_f_compat}).
+
+
+\subsection{Problème}
+On cherche une partition \(\mathscr{P}\) de \(\mathscr{A}\) vérifiant les contraintes suivantes:
+\begin{itemize}
+\item toutes les detections apparaissent une et une seule fois dans la partition ([1] et [2])
+\item toutes les detections d'un groupe sont compatibles entre elles ([3])
+\item les détections de deux groupes différents sont incompatibles entre elles ([3])
+\item les detections peuvent correspondre à un même panneau de \(\mathbb{E}\) ([4])
+\end{itemize}
+\[
+\left\{
+\begin{aligned}
+	&	\bigcup\limits_{\Omega \in \mathscr{P}}\Omega = \mathscr{A}	& [1]	\\
+	&	\forall (\Omega_{1}, \Omega_{2}) \in \mathscr{P}^{2}, \quad \Omega_{1} \cap \Omega_{2} \neq \varnothing \quad \Longrightarrow \quad \Omega_{1} = \Omega_{2}			& [2]	\\
+	&	\forall \Omega \in \mathscr{P}, \quad f(\Omega) = 1		& [3]	\\
+	&	\forall \Omega \in \mathscr{P}, \quad \exists p \in \mathscr{E}, \quad \forall \mathscr{D} \in \Omega, \quad dist(D, p) \text{ pas trop grand}	& [4]
+\end{aligned}
+\right.
+\]
+
+
+\section{Solution par matrices de similarités}
+
+Soient \(n\) detections de panneaux \(\mathscr{D}_{i, 1\leq i\leq n}\)
+
+Soit la matrice des compatibilités \(M = (m_{i,j} \in \{0, 1\}, (i, j) \in [\![1..n]\!]^{2})\), matrice carrée booleene de taille \(n\) définie par \(\forall (i, j) \in [\![1..n]\!]^{2}, \quad m_{i,j} = f_{compat}(\{p_{i}, p_{j}\})\). Par définition, cette matrice est symétrique, et sa trace vaut \(n\): \(M^{T} = M \quad ; \quad Tr(M) = n\)
+
+On cherche à clusteriser la matrice, en extrayant les plus grands groupes de détections compatibles entre elles.
+La matrice des compatibilités correspond à une clusterisation compatible ssi elle peut être réorganisée par réindexation des panneaux (i.e. en appliquant une même permutation des lignes et des colones) en une matrice diagonale par blocks. Cela peut se traduire par l'égalité des lignes au sein d'une clusterisation.
+
+Exemple:
+
+Clusterisations compatibles
+
+\(\begin{pmatrix}
+	1&0&0&0&0&0	\\
+	0&1&1&1&0&0	\\
+	0&1&1&1&0&0	\\
+	0&1&1&1&0&0	\\
+	0&0&0&0&1&1	\\
+	0&0&0&0&1&1	\\
+\end{pmatrix}\)
+\(\begin{pmatrix}
+	1&0&0&1&0&1	\\
+	0&1&0&0&1&0	\\
+	0&0&1&0&0&0	\\
+	1&0&0&1&0&1	\\
+	0&1&0&0&1&0	\\
+	1&0&0&1&0&1	\\
+\end{pmatrix}\)
+
+Clusterisation non compatible
+
+\(\begin{pmatrix}
+	1&0&0&0&0&0	\\
+	0&1&1&1&0&0	\\
+	0&1&1&1&0&1	\\
+	0&1&1&1&0&0	\\
+	0&0&0&0&1&1	\\
+	0&0&1&0&1&1	\\
+\end{pmatrix}\)
+
+La matrice des compatibilité n'est pas nécessairement clusterisée compatible. On cherche donc une matrice \(M'\) clusterisée compatible avec un minimum de clusters. Afin de garantire la compatibilité, \(M'\) doit vérifier \(\forall (i,j), m_{i,j} \geq m'_{i,j}\)
+
+\section{Annexe}
+
+\subsection{Exemple de fonction de compatibilité}
+
+\label{ex_f_compat}
+Rappel des définitions : voir \ref{def_f_compat}.
+
+...
+
+\end{document}
