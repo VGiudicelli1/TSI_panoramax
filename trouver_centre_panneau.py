@@ -632,6 +632,8 @@ def get_sign_height_rectangle(img, contour, tag):
 	return height_calculated
 
 
+
+
 def distance(point1, point2):
 	"""
 	
@@ -696,29 +698,27 @@ if __name__ == '__main__':
 		
 		count = 1
 		workfolder = os.listdir(folder+ "/" + category) #On construit les chemins d'accès
-		if "A13a" in category:
-			for file in workfolder: # On parcourt chaque catégorie de panneau
-				print("  IMAGE - ", count)
-				print(file)
-				picture_path = folder+ "/" + category + "/" + file
+		for file in workfolder: # On parcourt chaque catégorie de panneau
+			print("  IMAGE - ", count)
+			print(file)
+			picture_path = folder+ "/" + category + "/" + file
 
-				img = cv2.imread(picture_path) # Reading the image with cv2
-				imgGray = BGRtoGRAY(img) # On la transforme en niveaux de gris
-				imgEdges = DetectionContours(imgGray) # Finding the contours of the image
-				shape = get_shape(tag, dico) # Getting the shape of the sign, according to the dictionnary
-
-				
-				approximated_polygon, number_of_sides = get_contour(img, imgEdges, shape)
-				center_in_cropped_sign = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
-				w,h,x,y = extraction.get_whxy_from_img_path(picture_path) # Getting the cropped sign informations
-				final_center = find_center_in_original_picture(img, center_in_cropped_sign, x, y) # Getting the center of the sign in the original image from panoramax
-				#print("FINAL CENTER ", final_center)
-				#plotting.show_image(img, title='Objects Detected')
-				
-				height_sign = get_sign_height(img, approximated_polygon, shape) # Getting the height of the sign
-				
-				plotting.show_image(img, title='Height')
-				print("SIGN CENTER in cropped image : ", center_in_cropped_sign)
-				print("SIGN CENTER in original image : ", final_center)
-				print("SIGN HEIGHT : ", height_sign)
-				count += 1
+			img = cv2.imread(picture_path) # Reading the image with cv2
+			imgGray = BGRtoGRAY(img) # On la transforme en niveaux de gris
+			imgEdges = DetectionContours(imgGray) # Finding the contours of the image
+			shape = get_shape(tag, dico) # Getting the shape of the sign, according to the dictionnary
+			
+			approximated_polygon, number_of_sides = get_contour(img, imgEdges, shape)
+			center_in_cropped_sign = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
+			w,h,x,y = extraction.get_whxy_from_img_path(picture_path) # Getting the cropped sign informations
+			final_center = find_center_in_original_picture(img, center_in_cropped_sign, x, y) # Getting the center of the sign in the original image from panoramax
+			#print("FINAL CENTER ", final_center)
+			#plotting.show_image(img, title='Objects Detected')
+			
+			height_sign = get_sign_height(img, approximated_polygon, shape) # Getting the height of the sign
+			
+			plotting.show_image(img, title='Height')
+			print("SIGN CENTER in cropped image : ", center_in_cropped_sign)
+			print("SIGN CENTER in original image : ", final_center)
+			print("SIGN HEIGHT : ", height_sign)
+			count += 1
