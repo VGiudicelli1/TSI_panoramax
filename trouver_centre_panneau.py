@@ -363,7 +363,7 @@ def get_sign_height(img, contour, shape, tag):
 
     """
     if shape == 2 or shape == 4:
-        if number_of_sides < 8:
+        if number_of_sides < 15:
             height = get_sign_height_circle(img, contour)
         else:
             height = None
@@ -383,38 +383,52 @@ def get_sign_height(img, contour, shape, tag):
     return height
 
 def get_sign_height_circle(img, contour):
+    """
+    This function returns the height of a rond sign, considering the different
+    shapes or colors it can have.
+
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image containing the sign.
+    contour : ndarray
+        List of the points constituing the contour of the sign.
+
+    Returns
+    -------
+    height_calculated : float
+        Height of the sign, in pixels.
+
+    """
     liste_pixels = make_liste_contour(contour)
 
-    x_min = min(liste_pixels, key=lambda coord: coord[0])
-    x_max = max(liste_pixels, key=lambda coord: coord[0])
-    y_min = min(liste_pixels, key=lambda coord: coord[1])
-    y_max = max(liste_pixels, key=lambda coord: coord[1])
+    p1 = min(liste_pixels, key=lambda coord: coord[0])
+    p2 = max(liste_pixels, key=lambda coord: coord[0])
+    p3 = min(liste_pixels, key=lambda coord: coord[1])
+    p4 = max(liste_pixels, key=lambda coord: coord[1])
     
-    color1 = get_pixel_rgb(img, x_min[0] + 3, x_min[1])
-    color2 = get_pixel_rgb(img, x_max[0] - 3, x_max[1])
-    color3 = get_pixel_rgb(img, y_min[0], y_min[1] + 3)
-    color4 = get_pixel_rgb(img, y_max[0], y_max[1] - 3)
+    color1 = get_pixel_rgb(img, p1[0] + 4, p1[1])
+    color2 = get_pixel_rgb(img, p2[0] - 4, p2[1])
+    color3 = get_pixel_rgb(img, p3[0], p3[1] + 4)
+    color4 = get_pixel_rgb(img, p4[0], p4[1] - 4)
     liste_couleurs = (color1, color2, color3, color4)
     verif = []
     for color in liste_couleurs:
         R = color[0]
-        v=color[1]
-        v2 = color[2]
-        C = int(v) + int(v2)
-        #C = color[1] + color[2]
-        #print("color R", R)
-        #print("value C", C)
-        if R > C:
+        G =color[1]
+        B = color[2]
+        C = int(G) + int(B)
+        if R > 0.75*C:
             verif.append(R)
-    print("Les couleurs sont :", color1, color2, color3, color4)
-    # if len(verif)>= 3:
-    #     h1 = np.sqrt((x_min[0] - x_max[0])**2 + (x_min[1] - x_max[1])**2)
-    #     h2 = np.sqrt((y_min[0] - y_max[0])**2 + (y_min[1] - y_max[1])**2)
-    #     h = (h1 + h2) / 2
-        # return h
-    # else:
-    #     get_hauteur_sign(img,x_min, x_max, y_min, y_max)
-    return x_min, x_max, y_min, y_max
+    if len(verif)>=3:
+        # Case of the extern contour
+        # We calculate the center of the base
+        height_calculated = (distance(p1,p2) + distance(p3, p4)) / 2
+    else:
+        # Case of the intern contour
+        # TODO
+        height_calculated = None
+    return height_calculated
 
 def get_sign_height_triangle(img, contour, boolean):
     """
