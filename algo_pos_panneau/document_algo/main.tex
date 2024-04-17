@@ -64,7 +64,11 @@ On cherche une partition \(\mathscr{P}\) de \(\mathscr{A}\) vérifiant les contr
 
 Soient \(n\) detections de panneaux \(\mathscr{D}_{i, 1\leq i\leq n}\)
 
+\subsection{Matrice des compatibilités}
+
 Soit la matrice des compatibilités \(M = (m_{i,j} \in \{0, 1\}, (i, j) \in [\![1..n]\!]^{2})\), matrice carrée booleene de taille \(n\) définie par \(\forall (i, j) \in [\![1..n]\!]^{2}, \quad m_{i,j} = f_{compat}(\{p_{i}, p_{j}\})\). Par définition, cette matrice est symétrique, et sa trace vaut \(n\): \(M^{T} = M \quad ; \quad Tr(M) = n\)
+
+\subsection{Matrice clusterisée}
 
 On cherche à clusteriser la matrice, en extrayant les plus grands groupes de détections compatibles entre elles.
 La matrice des compatibilités correspond à une clusterisation compatible ssi elle peut être réorganisée par réindexation des panneaux (i.e. en appliquant une même permutation des lignes et des colones) en une matrice diagonale par blocks. Cela peut se traduire par l'égalité des lignes au sein d'une clusterisation.
@@ -101,7 +105,38 @@ Clusterisation non compatible
 	0&0&1&0&1&1	\\
 \end{pmatrix}\)
 
-La matrice des compatibilité n'est pas nécessairement clusterisée compatible. On cherche donc une matrice \(M'\) clusterisée compatible avec un minimum de clusters. Afin de garantire la compatibilité, \(M'\) doit vérifier \(\forall (i,j), m_{i,j} \geq m'_{i,j}\). On utilisera la notation suivante pour exprimer les 
+La matrice des compatibilité n'est pas nécessairement clusterisée compatible. On cherche donc une matrice \(M'\) clusterisée compatible avec un minimum de clusters. Afin de garantire la compatibilité, \(M'\) doit vérifier \(\forall (i,j), m_{i,j} \geq m'_{i,j}\). On utilisera la notation suivante pour exprimer les lignes (idem pour les colones) \(m_{i, :} = (m_{i, j}, j\in[\![1, n]\!])\)
+
+\subsection{Matrice des compatibilités semblables}
+
+On construit la matrice des compatibilité semblables \(S_{i,j} = g(m_{i, :}, m_{j, :}) * m_{i,j}\) avec \(g\) une distance sur les lignes de \(M\). On prends ici \(g: A \in \{0,1\}^{n}, B \in \{0,1\}^{n} \mapsto \dfrac{\sum a_{i}\&b_{i}}{\sum a_{i}|b_{i}} \in [0, 1]\) avec \(\&, |\) les opérateurs binaires ET et OU.
+
+Nous abuserons de la notation pour écrire \(S(M)\) la matrice des compatibilités semblables issu de \(M\). \(S\) est donc la fonction qui a une matrice de compatibilité associe sa matrice des compatibilités semblables.
+
+\(S(M)\) vérifie bien par définition la propriété \(\forall (i,j), m_{i,j} \geq m'_{i,j}\).
+
+\subsection{Algorithme}
+
+Input:
+\begin{itemize}
+\item	\(p_{i}, i \in [\![1, n]\!]\): détections de panneaux
+\end{itemize}
+Paramètres:
+\begin{itemize}
+\item	\(n\_itter\): nombre d'ittérations
+\end{itemize}
+
+Initialisation:
+Construire \(M_{0}\) la matrice des compatibilités issue des detections de panneaux
+
+Etape \(k \in [\![1, n\_itter]\!]\):
+\(M_{k} = \left(S(M_{k-1}) \geq \dfrac{k}{n\_itter}\right)\)
+
+Fin:
+\(M' = M_{n\_itter}\)
+
+\(M'\) est ainsi clusterisé. 
+
 
 \section{Annexe}
 
