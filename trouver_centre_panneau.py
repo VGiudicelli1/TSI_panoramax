@@ -347,81 +347,95 @@ def make_liste_contour(contour):
 	return list_pixels
 
 
-def get_sign_height(img, contour, shape):
-	"""
+def get_sign_height(img, contour, shape, tag):
+    """
 
-	Parameters
-	----------
-	img : ndarray
-		Cropped image containing the sign.
-	contour : ndarray
-		List of the points constituing the contour of the sign.
-	shape : int
-		Shape of the sign, encoded.
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image containing the sign.
+    contour : ndarray
+        List of the points constituing the contour of the sign.
+    shape : int
+        Shape of the sign, encoded.
 
-	Returns
-	-------
-	height : float
-		Height of the sign in the image, in pixels.
+    Returns
+    -------
+    height : float
+        Height of the sign in the image, in pixels.
 
-	"""
-	if shape == 2 or shape == 4:
-		if number_of_sides < 8:
-			height = get_sign_height_circle(img, contour)
-		else:
-			height = None
-	elif shape == 0 or shape == 1 or shape == 9:
-		if number_of_sides == 3:
-			if shape == 0:
-				height = get_sign_height_triangle(img, contour, True)
-			else:
-				height = get_sign_height_triangle(img, contour, False)
-		else:
-			height = None
-	else:
-		if number_of_sides == 4:
-			height = get_sign_height_rectangle(img, contour)
-		else:
-			height = None
-	return height
+    """
+    if shape == 2 or shape == 4:
+        if number_of_sides < 15:
+            height = get_sign_height_circle(img, contour)
+        else:
+            height = None
+    elif shape == 0 or shape == 1 or shape == 9:
+        if number_of_sides == 3:
+            if shape == 0:
+                height = get_sign_height_triangle(img, contour, True)
+            else:
+                height = get_sign_height_triangle(img, contour, False)
+        else:
+            height = None
+    else:
+        if number_of_sides == 4:
+            height = get_sign_height_rectangle(img, contour, tag)
+        else:
+            height = None
+    return height
 
 def get_sign_height_circle(img, contour):
-	liste_pixels = make_liste_contour(contour)
+    """
+    This function returns the height of a rond sign, considering the different
+    shapes or colors it can have.
 
-	x_min = min(liste_pixels, key=lambda coord: coord[0])
-	x_max = max(liste_pixels, key=lambda coord: coord[0])
-	y_min = min(liste_pixels, key=lambda coord: coord[1])
-	y_max = max(liste_pixels, key=lambda coord: coord[1])
-	
-	color1 = get_pixel_rgb(img, x_min[0] + 3, x_min[1])
-	color2 = get_pixel_rgb(img, x_max[0] - 3, x_max[1])
-	color3 = get_pixel_rgb(img, y_min[0], y_min[1] + 3)
-	color4 = get_pixel_rgb(img, y_max[0], y_max[1] - 3)
-	liste_couleurs = (color1, color2, color3, color4)
-	verif = []
-	for color in liste_couleurs:
-		R = color[0]
-		v=color[1]
-		v2 = color[2]
-		C = int(v) + int(v2)
-		#C = color[1] + color[2]
-		#print("color R", R)
-		#print("value C", C)
-		if R > C:
-			verif.append(R)
-	print("Les couleurs sont :", color1, color2, color3, color4)
-	# if len(verif)>= 3:
-	#	 h1 = np.sqrt((x_min[0] - x_max[0])**2 + (x_min[1] - x_max[1])**2)
-	#	 h2 = np.sqrt((y_min[0] - y_max[0])**2 + (y_min[1] - y_max[1])**2)
-	#	 h = (h1 + h2) / 2
-		# return h
-	# else:
-	#	 get_hauteur_sign(img,x_min, x_max, y_min, y_max)
-	return x_min, x_max, y_min, y_max
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image containing the sign.
+    contour : ndarray
+        List of the points constituing the contour of the sign.
+
+    Returns
+    -------
+    height_calculated : float
+        Height of the sign, in pixels.
+
+    """
+    liste_pixels = make_liste_contour(contour)
+
+    p1 = min(liste_pixels, key=lambda coord: coord[0])
+    p2 = max(liste_pixels, key=lambda coord: coord[0])
+    p3 = min(liste_pixels, key=lambda coord: coord[1])
+    p4 = max(liste_pixels, key=lambda coord: coord[1])
+    
+    color1 = get_pixel_rgb(img, p1[0] + 4, p1[1])
+    color2 = get_pixel_rgb(img, p2[0] - 4, p2[1])
+    color3 = get_pixel_rgb(img, p3[0], p3[1] + 4)
+    color4 = get_pixel_rgb(img, p4[0], p4[1] - 4)
+    liste_couleurs = (color1, color2, color3, color4)
+    verif = []
+    for color in liste_couleurs:
+        R = color[0]
+        G =color[1]
+        B = color[2]
+        C = int(G) + int(B)
+        if R > 0.75*C:
+            verif.append(R)
+    if len(verif)>=3:
+        # Case of the extern contour
+        # We calculate the center of the base
+        height_calculated = (distance(p1,p2) + distance(p3, p4)) / 2
+    else:
+        # Case of the intern contour
+        # TODO
+        height_calculated = None
+    return height_calculated
 
 def get_sign_height_triangle(img, contour, boolean):
 	"""
-	This tcheck what part of the sign the contour found and, depending on it,
+	This function checks what part of the sign the contour found and, depending on it,
 	throws to sign height calculation.
 
 	Parameters
@@ -541,98 +555,94 @@ def get_sign_height_triangle(img, contour, boolean):
 	
 	return height_calculated
 		
-
 def get_sign_height_rectangle(img, contour, tag):
-	"""
-	
-	This function returns the height of a rectangular sign, considering the different
-	shapes or colors it can have.
-	
-	Parameters
-	----------
-	img : ndarray
-		Cropped image containing the sign.
-	contour : ndarray
-		List of the points constituing the contour of the sign.
-	tag : String
-		Code identifying the sign.
+    """
+    
+    This function returns the height of a rectangular sign, considering the different
+    shapes or colors it can have.
+    
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image containing the sign.
+    contour : ndarray
+        List of the points constituing the contour of the sign.
+    tag : String
+        Code identifying the sign.
 
-	Returns
-	-------
-	height_calculated : Float
-		Height of the sign.
+    Returns
+    -------
+    height_calculated : Float
+        Height of the sign.
 
-	"""
-	list_pixels = make_liste_contour(contour)
-	# Peculiar squares and rectangles which could not be treated right
-	blue_square_cases = ["CE22", "CE16", "CE14", "CE3a", "CE2e"]
-	diamond_cases = ["AB6", "AB7"]
-	
-	top_left = min(list_pixels, key=lambda p: p[0] + p[1])
-	top_right = max(list_pixels, key=lambda p: (p[0], -p[1]))
-	bottom_left = min(list_pixels, key=lambda p: (p[0], -p[1]))
-	bottom_right = max(list_pixels, key=lambda p: p[0] + p[1])
-	
-	# Case disjonction
-	if tag in blue_square_cases: # Color : blue
-		# Let's take a look at the colors near interest points
-		color1 = get_pixel_rgb(img, top_left[0] + 4, top_left[1]+4)
-		color2 = get_pixel_rgb(img, top_right[0] - 4, top_right[1]+4)
-		color3 = get_pixel_rgb(img, bottom_left[0] + 4, bottom_left[1]-4)
-		color4 = get_pixel_rgb(img, bottom_right[0] - 4, bottom_right[1]-4)
-		
-		list_colors = (color1, color2, color3, color4)
-		verif = []
-		for color in list_colors: # Tchecking the color
-			R = color[0]
-			G = color[1]
-			B = color[2]
-			J = int(R) + int(G)
-			if B > 0.75 * J:
-				verif.append(B)
-		if len(verif)>=3:
-			# Case of the extern contour
-			# We calculate the height
-			height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2
-		else:
-			# Case of the intern contour
-			# TODO
-			return None
-	elif tag in diamond_cases: # Color : yellow
-		# In the case of the diamond, we must redefine the points
-		top = min(list_pixels, key=lambda coord: coord[1])
-		bottom = max(list_pixels, key=lambda coord: coord[1])
-		right = max(list_pixels, key=lambda coord: coord[0])
-		left = min(list_pixels, key=lambda coord: coord[0])
-		color1 = get_pixel_rgb(img, top[0], top[1]+4)
-		color2 = get_pixel_rgb(img, bottom[0], bottom[1]-4)
-		color3 = get_pixel_rgb(img, left[0] + 4, left[1])
-		color4 = get_pixel_rgb(img, right[0] - 4, right[1])
-		
-		list_colors = (color1, color2, color3, color4)
-		verif = []
-		for color in list_colors: # Tchecking the color
-			R = color[0]
-			G = color[1]
-			B = color[2]
-			J = int(R) + int(G)
-			if B < 0.75 * J: # Do we have a yellow color ?
-				verif.append(B)
-		if len(verif)>=3:
-			# Case of the extern contour
-			# we calculate the height
-			height_calculated = distance(top, bottom)
-		else:
-			# Case of the intern contour
-			# TODO
-			return None
-	else:
-		height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2	
-	
-	return height_calculated
-
-
-
+    """
+    list_pixels = make_liste_contour(contour)
+    # Peculiar squares and rectangles which could not be treated right
+    blue_square_cases = ["CE22", "CE16", "CE14", "CE3a", "CE2e"]
+    diamond_cases = ["AB6", "AB7"]
+    
+    top_left = min(list_pixels, key=lambda p: p[0] + p[1])
+    top_right = max(list_pixels, key=lambda p: (p[0], -p[1]))
+    bottom_left = min(list_pixels, key=lambda p: (p[0], -p[1]))
+    bottom_right = max(list_pixels, key=lambda p: p[0] + p[1])
+    
+    # Case disjonction
+    if tag in blue_square_cases: # Color : blue
+        # Let's take a look at the colors near interest points
+        color1 = get_pixel_rgb(img, top_left[0] + 4, top_left[1]+4)
+        color2 = get_pixel_rgb(img, top_right[0] - 4, top_right[1]+4)
+        color3 = get_pixel_rgb(img, bottom_left[0] + 4, bottom_left[1]-4)
+        color4 = get_pixel_rgb(img, bottom_right[0] - 4, bottom_right[1]-4)
+        
+        list_colors = (color1, color2, color3, color4)
+        verif = []
+        for color in list_colors: # Tchecking the color
+            R = color[0]
+            G = color[1]
+            B = color[2]
+            J = int(R) + int(G)
+            if B > 0.75 * J:
+                verif.append(B)
+        if len(verif)>=3:
+            # Case of the extern contour
+            # We calculate the height
+            height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2
+        else:
+            # Case of the intern contour
+            # TODO
+            return None
+    elif tag in diamond_cases: # Color : yellow
+        # In the case of the diamond, we must redefine the points
+        top = min(list_pixels, key=lambda coord: coord[1])
+        bottom = max(list_pixels, key=lambda coord: coord[1])
+        right = max(list_pixels, key=lambda coord: coord[0])
+        left = min(list_pixels, key=lambda coord: coord[0])
+        color1 = get_pixel_rgb(img, top[0], top[1]+4)
+        color2 = get_pixel_rgb(img, bottom[0], bottom[1]-4)
+        color3 = get_pixel_rgb(img, left[0] + 4, left[1])
+        color4 = get_pixel_rgb(img, right[0] - 4, right[1])
+        
+        list_colors = (color1, color2, color3, color4)
+        verif = []
+        for color in list_colors: # Tchecking the color
+            R = color[0]
+            G = color[1]
+            B = color[2]
+            J = int(R) + int(G)
+            if B < 0.75 * J: # Do we have a yellow color ?
+                verif.append(B)
+        if len(verif)>=3:
+            # Case of the extern contour
+            # we calculate the height
+            height_calculated = distance(top, bottom)
+        else:
+            # Case of the intern contour
+            # TODO
+            return None
+    else:
+        height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2    
+    
+    return height_calculated
 
 def distance(point1, point2):
 	"""
@@ -682,43 +692,31 @@ def get_pixel_rgb(img, row, col):
 	return real_color
 
 if __name__ == '__main__':
-	# On importe et on lit le CSV
-	dictionnaire_source = "panodico.csv"
-	dico = csv_reader(dictionnaire_source)
-	
-	folder = "./databaseee"
-	
-	dirs = os.listdir(folder)
-	for category in dirs: # On récupère chaque nom de dossier
-		print("CATEGORY ", category)
-		if category[:3] == "B14":
-			tag = "B14"
-		else:
-			tag = category
-		
-		count = 1
-		workfolder = os.listdir(folder+ "/" + category) #On construit les chemins d'accès
-		for file in workfolder: # On parcourt chaque catégorie de panneau
-			print("  IMAGE - ", count)
-			print(file)
-			picture_path = folder+ "/" + category + "/" + file
-
-			img = cv2.imread(picture_path) # Reading the image with cv2
-			imgGray = BGRtoGRAY(img) # On la transforme en niveaux de gris
-			imgEdges = DetectionContours(imgGray) # Finding the contours of the image
-			shape = get_shape(tag, dico) # Getting the shape of the sign, according to the dictionnary
-			
-			approximated_polygon, number_of_sides = get_contour(img, imgEdges, shape)
-			center_in_cropped_sign = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
-			w,h,x,y = extraction.get_whxy_from_img_path(picture_path) # Getting the cropped sign informations
-			final_center = find_center_in_original_picture(img, center_in_cropped_sign, x, y) # Getting the center of the sign in the original image from panoramax
-			#print("FINAL CENTER ", final_center)
-			#plotting.show_image(img, title='Objects Detected')
-			
-			height_sign = get_sign_height(img, approximated_polygon, shape) # Getting the height of the sign
-			
-			plotting.show_image(img, title='Height')
-			print("SIGN CENTER in cropped image : ", center_in_cropped_sign)
-			print("SIGN CENTER in original image : ", final_center)
-			print("SIGN HEIGHT : ", height_sign)
-			count += 1
+    # On importe et on lit le CSV
+    dictionnaire_source = "panodico.csv"
+    dico = csv_reader(dictionnaire_source)
+    
+    folder = "./DATA_BASE_SIMULEE"
+    
+    dirs = os.listdir(folder)
+    for category in dirs: # On récupère chaque nom de dossier
+        print("CATEGORY ", category)
+        if category[:3] == "B14":
+            tag = "B14"
+        else:
+            tag = category
+        
+        count = 1
+        workfolder = os.listdir(folder+ "/" + category) #On construit les chemins d'accès
+        for file in workfolder: # On parcourt chaque catégorie de panneau
+            print("  IMAGE - ", count)
+            count += 1
+            picture_path = folder+ "/" + category + "/" + file
+            #print("PICTURE PATH ", picture_path)
+            img = cv2.imread(picture_path) # Reading the image with cv2
+            imgGray = BGRtoGRAY(img) # On la transforme en niveaux de gris
+            imgEdges = DetectionContours(imgGray) # Finding the contours of the image
+            shape = get_shape(tag, dico) # Getting the shape of the sign, according to the dictionnary
+            #print("SHAPE ", shape)
+            
+            
