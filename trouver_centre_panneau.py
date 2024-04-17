@@ -15,10 +15,7 @@ import plotting
 import extraction
 import pandas as pd
 import os
-import matplotlib.pyplot as plt
-
-
-
+from scipy.spatial import ConvexHull
 
 def csv_reader(path):
 	"""
@@ -71,49 +68,50 @@ def get_shape(tag, dico):
 
 
 def get_contour(img, edges, shape):
-	"""
-	This function returns the biggest closed contour found in the cropped sign,
-	considered so as the sign contour
+    """
+    This function returns the biggest closed contour found in the cropped sign,
+    considered so as the sign contour
 
-	Parameters
-	----------
-	img : ndarray
-		Cropped sign image.
-	edges : ndarray
-		Canny contours detected in img.
-	shape : int
-		Code symbolizing the shape of the sign in the imge
+    Parameters
+    ----------
+    img : ndarray
+        Cropped sign image.
+    edges : ndarray
+        Canny contours detected in img.
+    shape : int
+        Code symbolizing the shape of the sign in the imge
 
-	Returns
-	-------
-	approx : ndarray
-		Approximation of the largest polygon on the image.
-	sides : int
-		Number of sides of the polygon approximated on the biggest contour detected.
+    Returns
+    -------
+    approx : ndarray
+        Approximation of the largest polygon on the image.
+    sides : int
+        Number of sides of the polygon approximated on the biggest contour detected.
 
-	"""
-	# On attribue une valeur de epsilon pour cibler au mieux une recherche de forme
-	if shape == 2 or shape == 4: # Circle and Octogon
-		value_for_epsilon = 0.02
-	elif shape == 0 or shape ==1 or shape == 9 : # Triangle
-		value_for_epsilon = 0.15
-	else:
-		value_for_epsilon = 0.15
-	# Finding contours in the image
-	contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    """
+    # On attribue une valeur de epsilon pour cibler au mieux une recherche de forme
+    if shape == 2 or shape == 4: # Circle and Octogon
+        value_for_epsilon = 0.02
+    elif shape == 0 or shape ==1 or shape == 9 : # Triangle
+        value_for_epsilon = 0.15
+    else:
+        value_for_epsilon = 0.15
+    # Finding contours in the image
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	# Sorting them to get the biggest one
-	contours = sorted(contours, key=cv2.contourArea, reverse=True)
-	largest_contour = contours[0]
-	
-	# Approximation of a polygon
-	epsilon = value_for_epsilon * cv2.arcLength(largest_contour, True) # Definition of the factor 
-	approx = cv2.approxPolyDP(largest_contour, epsilon, True) # Approximation
-	sides = len(approx) # Number of sides of the polygon, to know if we found the good form
-	# x_min, x_max, y_min, y_max = which_circle(img, largest_contour)
-	#cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
-	#cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
-	return approx, sides
+    # Sorting them to get the biggest one
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    largest_contour = contours[0]
+    
+    # Approximation of a polygon
+    epsilon = value_for_epsilon * cv2.arcLength(largest_contour, True) # Definition of the factor 
+    approx = cv2.approxPolyDP(largest_contour, epsilon, True) # Approximation
+    sides = len(approx) # Number of sides of the polygon, to know if we found the good form
+    # x_min, x_max, y_min, y_max = which_circle(img, largest_contour)
+    cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
+    cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
+    return approx, sides
+
 
 
 def get_center_in_cropped_sign(img, shape, imgEdges, contour_sign, number_of_sides):
@@ -322,29 +320,29 @@ def find_center_in_original_picture(img, center, x, y):
 
 
 def make_liste_contour(contour):
-	'''
-	Formatting function making a contour, which is a ndarray, a 
-	list more easy to deals with.
-	
+    '''
+    Formatting function making a contour, which is a ndarray, a 
+    list more easy to deals with.
+    
 
-	Parameters
-	----------
-	contour : np.ndarray
-		Closed polygon.
+    Parameters
+    ----------
+    contour : np.ndarray
+        Closed polygon.
 
-	Returns
-	-------
-	liste_pixels : list
-		list of points constituing the polygon.
+    Returns
+    -------
+    liste_pixels : list
+        list of points constituing the polygon.
 
-	'''
-	list_pixels =[]
-	for pixel in contour:
-		x = pixel[0][0]
-		y = pixel[0][1]
-		coord = (x,y)
-		list_pixels.append(coord)
-	return list_pixels
+    '''
+    list_pixels =[]
+    for pixel in contour:
+        x = pixel[0][0]
+        y = pixel[0][1]
+        coord = (x,y)
+        list_pixels.append(coord)
+    return list_pixels
 
 
 def get_sign_height(img, contour, shape, tag):
@@ -431,6 +429,95 @@ def get_sign_height_circle(img, contour):
         # Case of the intern contour
         # TODO
         height_calculated = None
+    return height_calculated
+
+def get_sign_height_rectangle(img, contour, tag):
+    """
+    
+    This function returns the height of a rectangular sign, considering the different
+    shapes or colors it can have.
+    
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image containing the sign.
+    contour : ndarray
+        List of the points constituing the contour of the sign.
+    tag : String
+        Code identifying the sign.
+
+    Returns
+    -------
+    height_calculated : Float
+        Height of the sign.
+
+    """
+    list_pixels = make_liste_contour(contour)
+    # Peculiar squares and rectangles which could not be treated right
+    blue_square_cases = ["CE22", "CE16", "CE14", "CE3a", "CE2e"]
+    diamond_cases = ["AB6", "AB7"]
+    
+    top_left = min(list_pixels, key=lambda p: p[0] + p[1])
+    top_right = max(list_pixels, key=lambda p: (p[0], -p[1]))
+    bottom_left = min(list_pixels, key=lambda p: (p[0], -p[1]))
+    bottom_right = max(list_pixels, key=lambda p: p[0] + p[1])
+    
+    # Case disjonction
+    if tag in blue_square_cases: # Color : blue
+        # Let's take a look at the colors near interest points
+        color1 = get_pixel_rgb(img, top_left[0] + 4, top_left[1]+4)
+        color2 = get_pixel_rgb(img, top_right[0] - 4, top_right[1]+4)
+        color3 = get_pixel_rgb(img, bottom_left[0] + 4, bottom_left[1]-4)
+        color4 = get_pixel_rgb(img, bottom_right[0] - 4, bottom_right[1]-4)
+        
+        list_colors = (color1, color2, color3, color4)
+        verif = []
+        for color in list_colors: # Tchecking the color
+            R = color[0]
+            G = color[1]
+            B = color[2]
+            J = int(R) + int(G)
+            if B > 0.75 * J:
+                verif.append(B)
+        if len(verif)>=3:
+            # Case of the extern contour
+            # We calculate the height
+            height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2
+        else:
+            # Case of the intern contour
+            # TODO
+            return None
+    elif tag in diamond_cases: # Color : yellow
+        # In the case of the diamond, we must redefine the points
+        top = min(list_pixels, key=lambda coord: coord[1])
+        bottom = max(list_pixels, key=lambda coord: coord[1])
+        right = max(list_pixels, key=lambda coord: coord[0])
+        left = min(list_pixels, key=lambda coord: coord[0])
+        color1 = get_pixel_rgb(img, top[0], top[1]+4)
+        color2 = get_pixel_rgb(img, bottom[0], bottom[1]-4)
+        color3 = get_pixel_rgb(img, left[0] + 4, left[1])
+        color4 = get_pixel_rgb(img, right[0] - 4, right[1])
+        
+        list_colors = (color1, color2, color3, color4)
+        verif = []
+        for color in list_colors: # Tchecking the color
+            R = color[0]
+            G = color[1]
+            B = color[2]
+            J = int(R) + int(G)
+            if B < 0.75 * J: # Do we have a yellow color ?
+                verif.append(B)
+        if len(verif)>=3:
+            # Case of the extern contour
+            # we calculate the height
+            height_calculated = distance(top, bottom)
+        else:
+            # Case of the intern contour
+            # TODO
+            return None
+    else:
+        height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2    
+    
     return height_calculated
 
 def get_sign_height_triangle(img, contour, boolean):
@@ -554,95 +641,7 @@ def get_sign_height_triangle(img, contour, boolean):
 		cv2.line(img, p3_prime, p4_prime, (255, 0, 255), 1)
 	
 	return height_calculated
-		
-def get_sign_height_rectangle(img, contour, tag):
-    """
-    
-    This function returns the height of a rectangular sign, considering the different
-    shapes or colors it can have.
-    
-    Parameters
-    ----------
-    img : ndarray
-        Cropped image containing the sign.
-    contour : ndarray
-        List of the points constituing the contour of the sign.
-    tag : String
-        Code identifying the sign.
 
-    Returns
-    -------
-    height_calculated : Float
-        Height of the sign.
-
-    """
-    list_pixels = make_liste_contour(contour)
-    # Peculiar squares and rectangles which could not be treated right
-    blue_square_cases = ["CE22", "CE16", "CE14", "CE3a", "CE2e"]
-    diamond_cases = ["AB6", "AB7"]
-    
-    top_left = min(list_pixels, key=lambda p: p[0] + p[1])
-    top_right = max(list_pixels, key=lambda p: (p[0], -p[1]))
-    bottom_left = min(list_pixels, key=lambda p: (p[0], -p[1]))
-    bottom_right = max(list_pixels, key=lambda p: p[0] + p[1])
-    
-    # Case disjonction
-    if tag in blue_square_cases: # Color : blue
-        # Let's take a look at the colors near interest points
-        color1 = get_pixel_rgb(img, top_left[0] + 4, top_left[1]+4)
-        color2 = get_pixel_rgb(img, top_right[0] - 4, top_right[1]+4)
-        color3 = get_pixel_rgb(img, bottom_left[0] + 4, bottom_left[1]-4)
-        color4 = get_pixel_rgb(img, bottom_right[0] - 4, bottom_right[1]-4)
-        
-        list_colors = (color1, color2, color3, color4)
-        verif = []
-        for color in list_colors: # Tchecking the color
-            R = color[0]
-            G = color[1]
-            B = color[2]
-            J = int(R) + int(G)
-            if B > 0.75 * J:
-                verif.append(B)
-        if len(verif)>=3:
-            # Case of the extern contour
-            # We calculate the height
-            height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2
-        else:
-            # Case of the intern contour
-            # TODO
-            return None
-    elif tag in diamond_cases: # Color : yellow
-        # In the case of the diamond, we must redefine the points
-        top = min(list_pixels, key=lambda coord: coord[1])
-        bottom = max(list_pixels, key=lambda coord: coord[1])
-        right = max(list_pixels, key=lambda coord: coord[0])
-        left = min(list_pixels, key=lambda coord: coord[0])
-        color1 = get_pixel_rgb(img, top[0], top[1]+4)
-        color2 = get_pixel_rgb(img, bottom[0], bottom[1]-4)
-        color3 = get_pixel_rgb(img, left[0] + 4, left[1])
-        color4 = get_pixel_rgb(img, right[0] - 4, right[1])
-        
-        list_colors = (color1, color2, color3, color4)
-        verif = []
-        for color in list_colors: # Tchecking the color
-            R = color[0]
-            G = color[1]
-            B = color[2]
-            J = int(R) + int(G)
-            if B < 0.75 * J: # Do we have a yellow color ?
-                verif.append(B)
-        if len(verif)>=3:
-            # Case of the extern contour
-            # we calculate the height
-            height_calculated = distance(top, bottom)
-        else:
-            # Case of the intern contour
-            # TODO
-            return None
-    else:
-        height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2    
-    
-    return height_calculated
 
 def distance(point1, point2):
 	"""
@@ -691,6 +690,68 @@ def get_pixel_rgb(img, row, col):
 	real_color = [R,G,B]
 	return real_color
 
+
+def is_the_sign_treatable(img, contour, number_of_sides, shape):
+    """
+    
+    This function returns a boolean : True if the sign is treatable,
+    False if it's not.
+    
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image of the sign.
+    contour : ndarray
+        List of points that draws the biggest polygon in the cropped image.
+    number_of_sides : int
+        Number of sides of the polygon found, should me the same as the number of sides of the shape.
+    shape : int
+        Encoded shape of the sign.
+
+    Returns
+    -------
+    bool
+        treatable aspect of the sign : True if it is treatable, False if it's not.
+
+    """
+    if number_of_sides>20:
+        return False
+    list_points = make_liste_contour(contour)
+    sign_area = area_of_point_cloud(list_points)
+    height, width, _ = img.shape
+    img_area = height * width
+    print("les aires : ", sign_area, img_area)
+    if sign_area < 0.05 * img_area:
+        return False
+    else:
+        return True
+    
+def area_of_point_cloud(points):
+    """
+    
+    This functions calculates the convex hull of the points found, that should be the
+    contour of the sign, and then returns the area of the convex hull.
+
+    Parameters
+    ----------
+    points : List
+        List of the points making the contour of the sygn : these points draw the polygon.
+
+    Returns
+    -------
+    area : Float
+        Area of the convex hull of the points.
+
+    """
+    points_array = np.array(points)
+    hull = ConvexHull(points_array)
+    indices = hull.vertices
+    convex_hull_points = points_array[indices]
+    # Area of the convex hull
+    area = 0.5 * np.abs(np.dot(convex_hull_points[:, 0], np.roll(convex_hull_points[:, 1], 1)) - 
+                        np.dot(convex_hull_points[:, 1], np.roll(convex_hull_points[:, 0], 1)))
+    return area
+
 if __name__ == '__main__':
     # On importe et on lit le CSV
     dictionnaire_source = "panodico.csv"
@@ -719,4 +780,20 @@ if __name__ == '__main__':
             shape = get_shape(tag, dico) # Getting the shape of the sign, according to the dictionnary
             #print("SHAPE ", shape)
             
+            approximated_polygon, number_of_sides = get_contour(img, imgEdges, shape)
+            center_in_cropped_sign = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
+            istreatable = is_the_sign_treatable(img, approximated_polygon, number_of_sides, shape)
+            plotting.show_image(img, title='Objects Detected')
+            if not istreatable:
+                print("Ce panneau ne peut pas être traité")
+                continue
+            w,h,x,y = extraction.get_whxy_from_img_path(picture_path) # Getting the cropped sign informations
+            final_center = find_center_in_original_picture(img, center_in_cropped_sign, x, y) # Getting the center of the sign in the original image from panoramax
+            #print("FINAL CENTER ", final_center)
+            #plotting.show_image(img, title='Objects Detected')
             
+            height_sign = get_sign_height(img, approximated_polygon, shape, tag) # Getting the height of the sign
+            
+            print("SIGN CENTER in cropped image : ", center_in_cropped_sign)
+            print("SIGN CENTER in original image : ", final_center)
+            print("SIGN HEIGHT : ", height_sign)
