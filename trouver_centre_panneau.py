@@ -628,6 +628,28 @@ def get_pixel_rgb(img, row, col):
 
 
 def is_the_sign_treatable(img, contour, number_of_sides, shape):
+    """
+    
+    This function returns a boolean : True if the sign is treatable,
+    False if it's not.
+    
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image of the sign.
+    contour : ndarray
+        List of points that draws the biggest polygon in the cropped image.
+    number_of_sides : int
+        Number of sides of the polygon found, should me the same as the number of sides of the shape.
+    shape : int
+        Encoded shape of the sign.
+
+    Returns
+    -------
+    bool
+        treatable aspect of the sign : True if it is treatable, False if it's not.
+
+    """
     if number_of_sides>20:
         return False
     list_points = make_liste_contour(contour)
@@ -641,20 +663,29 @@ def is_the_sign_treatable(img, contour, number_of_sides, shape):
         return True
     
 def area_of_point_cloud(points):
+    """
+    
+    This functions calculates the convex hull of the points found, that should be the
+    contour of the sign, and then returns the area of the convex hull.
+
+    Parameters
+    ----------
+    points : List
+        List of the points making the contour of the sygn : these points draw the polygon.
+
+    Returns
+    -------
+    area : Float
+        Area of the convex hull of the points.
+
+    """
     points_array = np.array(points)
-    # Calcul de l'enveloppe convexe
     hull = ConvexHull(points_array)
-    
-    # Récupération des indices des points formant l'enveloppe convexe
     indices = hull.vertices
-    
-    # Sélection des points de l'enveloppe convexe
     convex_hull_points = points_array[indices]
-    
-    # Calcul de l'aire de l'enveloppe convexe
+    # Area of the convex hull
     area = 0.5 * np.abs(np.dot(convex_hull_points[:, 0], np.roll(convex_hull_points[:, 1], 1)) - 
                         np.dot(convex_hull_points[:, 1], np.roll(convex_hull_points[:, 0], 1)))
-    
     return area
 
 if __name__ == '__main__':
