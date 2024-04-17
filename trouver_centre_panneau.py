@@ -476,17 +476,92 @@ def get_sign_height_triangle(img, contour, boolean):
     return height_calculated
 
 def get_sign_height_rectangle(img, contour, tag):
+    """
+    
+    This function returns the height of a rectangular sign, considering the different
+    shapes or colors it can have.
+    
+    Parameters
+    ----------
+    img : ndarray
+        Cropped image containing the sign.
+    contour : ndarray
+        List of the points constituing the contour of the sign.
+    tag : String
+        Code identifying the sign.
+
+    Returns
+    -------
+    height_calculated : Float
+        Height of the sign.
+
+    """
     list_pixels = make_liste_contour(contour)
-    signs_to_check = ["EB10", "CE22", "CE16", "CE14", "CE3a", "CE2e", "AB6", "AB7"]
+    # Peculiar squares and rectangles which could not be treated right
+    blue_square_cases = ["CE22", "CE16", "CE14", "CE3a", "CE2e"]
+    diamond_cases = ["AB6", "AB7"]
+    
     top_left = min(list_pixels, key=lambda p: p[0] + p[1])
     top_right = max(list_pixels, key=lambda p: (p[0], -p[1]))
     bottom_left = min(list_pixels, key=lambda p: (p[0], -p[1]))
     bottom_right = max(list_pixels, key=lambda p: p[0] + p[1])
-    if tag in signs_to_check:
-        #TODO
-        return None
+    
+    # Case disjonction
+    if tag in blue_square_cases: # Color : blue
+        # Let's take a look at the colors near interest points
+        color1 = get_pixel_rgb(img, top_left[0] + 4, top_left[1]+4)
+        color2 = get_pixel_rgb(img, top_right[0] - 4, top_right[1]+4)
+        color3 = get_pixel_rgb(img, bottom_left[0] + 4, bottom_left[1]-4)
+        color4 = get_pixel_rgb(img, bottom_right[0] - 4, bottom_right[1]-4)
+        
+        list_colors = (color1, color2, color3, color4)
+        verif = []
+        for color in list_colors: # Tchecking the color
+            R = color[0]
+            G = color[1]
+            B = color[2]
+            J = int(R) + int(G)
+            if B > 0.75 * J:
+                verif.append(B)
+        if len(verif)>=3:
+            # Case of the extern contour
+            # We calculate the height
+            height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2
+        else:
+            # Case of the intern contour
+            # TODO
+            return None
+    elif tag in diamond_cases: # Color : yellow
+        # In the case of the diamond, we must redefine the points
+        top = min(list_pixels, key=lambda coord: coord[1])
+        bottom = max(list_pixels, key=lambda coord: coord[1])
+        right = max(list_pixels, key=lambda coord: coord[0])
+        left = min(list_pixels, key=lambda coord: coord[0])
+        color1 = get_pixel_rgb(img, top[0], top[1]+4)
+        color2 = get_pixel_rgb(img, bottom[0], bottom[1]-4)
+        color3 = get_pixel_rgb(img, left[0] + 4, left[1])
+        color4 = get_pixel_rgb(img, right[0] - 4, right[1])
+        
+        list_colors = (color1, color2, color3, color4)
+        verif = []
+        for color in list_colors: # Tchecking the color
+            R = color[0]
+            G = color[1]
+            B = color[2]
+            J = int(R) + int(G)
+            if B < 0.75 * J: # Do we have a yellow color ?
+                verif.append(B)
+        if len(verif)>=3:
+            # Case of the extern contour
+            # we calculate the height
+            height_calculated = distance(top, bottom)
+        else:
+            # Case of the intern contour
+            # TODO
+            return None
     else:
         height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2    
+    
     return height_calculated
 
 
