@@ -4,11 +4,13 @@ import pandas as pd
 
 __path__ = "/".join(__file__.split("/")[:-1])
 
+DatabaseError = psycopg2.DatabaseError
+
 ###############################################################################
 ##  Database connection                                                      ##
 ###############################################################################
 
-def _load_config(filename=__path__ + "/database.ini", section="postgresql"):
+def load_config(filename=__path__ + "/database.ini", section="postgresql"):
     parser = ConfigParser()
     parser.read(filename)
     
@@ -22,14 +24,16 @@ def _load_config(filename=__path__ + "/database.ini", section="postgresql"):
         raise Exception('Section {0} not found in the {1} file'.format(section, filename))
     return config
 
-def _connect(config):
+def connect_db(logDefault = False):
     """ Connect to the PostgreSQL database server """
+    config = load_config()
     try:
         # connecting to the PostgreSQL server
         with psycopg2.connect(**config) as conn:
-            print('Connected to the PostgreSQL server.')
-            return conn
-    except (psycopg2.DatabaseError, Exception) as error:
+            if logDefault:
+                print('Connected to the PostgreSQL server.')
+            return conn, config
+    except (DatabaseError, Exception) as error:
         print(error)
 
 def df_to_insert(df, df_keys, struct, pg_table, pg_columns):
@@ -43,5 +47,5 @@ def df_to_insert(df, df_keys, struct, pg_table, pg_columns):
 ##  Start                                                                    ##
 ###############################################################################
 
-_config = _load_config()
-conn = _connect(_config)
+if __name__ == "__main__":
+    conn, config = connect_db(True)

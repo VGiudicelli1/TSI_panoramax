@@ -1,4 +1,4 @@
-from database_connect import conn, df_to_insert, _config
+from database_connect import connect_db, df_to_insert, DatabaseError
 import pandas as pd
 
 __path__ = "/".join(__file__.split("/")[:-1])
@@ -7,8 +7,8 @@ __path__ = "/".join(__file__.split("/")[:-1])
 ##  Database initialisation                                                  ##
 ###############################################################################
 
-def init_tests():
-    assert "test" in _config["database"]    # verify that config is for test
+def init_tests(conn, config):
+    assert "test" in config["database"]    # verify that config is for test
     seq_id = "a957f734-e816-4c1d-af36-7f35deea2b78"
     photo = pd.read_csv(__path__ + "/../data_test/cropped_signs/photo.csv")
     imagette = pd.read_csv(__path__ + "/../data_test/cropped_signs/imagette.csv")
@@ -39,7 +39,7 @@ def init_tests():
             ))
 
             conn.commit()
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (Exception, DatabaseError) as error:
         raise error
 
 ###############################################################################
@@ -47,4 +47,12 @@ def init_tests():
 ###############################################################################
 
 if __name__ == "__main__":
-    init_tests()
+    print("Connect to database...\t", end="")
+    conn, config = connect_db()
+    print("Done")
+
+    print("Format database...\t", end="")
+    init_tests(conn, config)
+    print("Done")
+
+    print("End")
