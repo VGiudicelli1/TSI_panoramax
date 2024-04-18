@@ -118,6 +118,29 @@ def are_detections_compatibles(detections, seuils=default_seuils):
     )
 
 
+def compatible_matrix(detections, seuils=default_seuils):
+    # create compat_mat
+    index = list(detections.index)
+    n = len(index)
+    revert_index = { index[k]:k for k in range(n) }
+
+    compat_mat = np.eye(n, dtype=np.uint8)
+
+    print(compat_mat)
+
+    for i in range(n-1):
+        for j in range(i+1, n):
+            if (are_detections_compatibles(
+                detections.loc[detections.index.isin((index[i], index[j]))]),
+                seuils):
+                compat_mat[i, j] = 1
+                compat_mat[j, i] = 1
+
+        print(compat_mat)
+
+    return compat_mat, index, revert_index
+
+
 if __name__ == "__main__":
     #from make_test_set import detections #, detections_noise
 
