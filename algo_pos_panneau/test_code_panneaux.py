@@ -8,4 +8,4 @@ def test_code():
 
 if __name__ == "__main__":
     import pytest
-    pytest.main(["-vv", __file__])
+    pytest.main(["-v", __file__])
