@@ -69,12 +69,12 @@ CREATE TABLE public.cropped_sign
 	picture_id CHARACTER VARYING NOT NULL,
 	sign_id INTEGER DEFAULT NULL,
 	"filename" CHARACTER VARYING NOT NULL,
-	x FLOAT,
-	y FLOAT,
-	dz FLOAT,		
-	sdf FLOAT,		-- size_dist_factor: dist = size * sdf
-	gisement FLOAT,		-- in degrees from North
-	orientation FLOAT,	-- in degrees from North
+	x FLOAT DEFAULT NULL,
+	y FLOAT DEFAULT NULL,
+	dz FLOAT DEFAULT NULL,
+	sdf FLOAT DEFAULT NULL,		-- size_dist_factor: dist = size * sdf
+	gisement FLOAT DEFAULT NULL,	-- in degrees from North
+	orientation FLOAT DEFAULT NULL,	-- in degrees from North
 	bbox CHARACTER VARYING,
 	code CHARACTER VARYING(16) NOT NULL,
 	"value" CHARACTER VARYING(256) DEFAULT NULL,
