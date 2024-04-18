@@ -1,5 +1,5 @@
 -- free database
--- DROP TABLE IF EXISTS sequence, photo, imagette, panneau;
+-- DROP TABLE IF EXISTS collection, picture, cropped_sign, sign;
 
 
 -- use postgis to manipule geometries
@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 -- --  Tables and constraints                                      -- --
 -- ------------------------------------------------------------------ --
 
-CREATE TABLE public.sequence
+CREATE TABLE public.collection
 (
 	id CHARACTER VARYING(256) NOT NULL,
 	"date" DATE NOT NULL,
@@ -19,34 +19,34 @@ CREATE TABLE public.sequence
 );
 
 
-ALTER TABLE public.sequence
+ALTER TABLE IF EXISTS public.collection
 	OWNER to postgres;
 
 
-CREATE TABLE public.photo
+CREATE TABLE public.picture
 (
 	id CHARACTER VARYING(256) NOT NULL,
-	id_sequence CHARACTER VARYING(256) NOT NULL,
+	collection_id CHARACTER VARYING(256) NOT NULL,
 	geom GEOMETRY (POINT, 4326) NOT NULL,
 	azimut FLOAT NOT NULL,
 	width INTEGER NOT NULL,
 	height INTEGER NOT NULL,
-	fov FLOAT NOT NULL,
-	href CHARACTER VARYING(512) NOT NULL,
-	
+	fov FLOAT,
+	model CHARACTER VARYING(256),
+
 	PRIMARY KEY (id),
-	FOREIGN KEY (id_sequence)
-		REFERENCES public.sequence (id) MATCH SIMPLE
+	FOREIGN KEY (collection_id)
+		REFERENCES public.collection (id) MATCH SIMPLE
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 		NOT VALID
 );
 
-ALTER TABLE public.photo
+ALTER TABLE IF EXISTS public.picture
 	OWNER to postgres;
 
 
-CREATE TABLE public.panneau
+CREATE TABLE public.sign
 (
 	id SERIAL NOT NULL,
 	geom GEOMETRY(POINT, 4326) NOT NULL,
@@ -59,35 +59,36 @@ CREATE TABLE public.panneau
 	PRIMARY KEY (id)
 );
 
-ALTER TABLE IF EXISTS public.panneau
+ALTER TABLE IF EXISTS public.sign
 	OWNER to postgres;
 
 
-CREATE TABLE public.imagette
+CREATE TABLE public.cropped_sign
 (
-	id CHARACTER VARYING(256) NOT NULL,
-	id_photo CHARACTER VARYING NOT NULL,
-	id_panneau INTEGER DEFAULT NULL,
-	x FLOAT NOT NULL,
-	y FLOAT NOT NULL,
-	dz FLOAT NOT NULL,
+	id SERIAL NOT NULL,
+	picture_id CHARACTER VARYING NOT NULL,
+	sign_id INTEGER DEFAULT NULL,
+    "filename" CHARACTER VARYING NOT NULL,
+	geom GEOMETRY(POINT, 4326) DEFAULT NULL,
+	x FLOAT,
+	y FLOAT,
+	dz FLOAT,
+    bbox CHARACTER VARYING,
 	code CHARACTER VARYING(16) NOT NULL,
 	"value" CHARACTER VARYING(256) DEFAULT NULL,
-	geom_estim GEOMETRY(POINT, 4326) DEFAULT NULL,
 	
 	PRIMARY KEY(id),
-	FOREIGN KEY (id_photo)
-		REFERENCES public.photo (id) MATCH SIMPLE
+	FOREIGN KEY (picture_id)
+		REFERENCES public.picture (id) MATCH SIMPLE
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 		NOT VALID,
-	FOREIGN KEY (id_panneau)
-		REFERENCES public.panneau (id) MATCH SIMPLE
+	FOREIGN KEY (sign_id)
+		REFERENCES public.sign (id) MATCH SIMPLE
 		ON UPDATE NO ACTION
 		ON DELETE NO ACTION
 		NOT VALID
 );
 
-ALTER TABLE IF EXISTS public.imagette
+ALTER TABLE IF EXISTS public.cropped_sign
 	OWNER to postgres;
-
