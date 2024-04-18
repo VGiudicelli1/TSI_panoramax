@@ -34,17 +34,14 @@ def csv_reader(path):
 	"""
 	return dict(np.genfromtxt(path, delimiter=",", dtype=None, encoding='UTF8'))
 
-
 def BGRtoGRAY(img):
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	return gray
-
 
 def DetectionContours(imgGray):
 	imgBlur = cv2.GaussianBlur(imgGray, (5, 5), 0)
 	edges = cv2.Canny(imgBlur, 50, 150)
 	return edges
-
 
 def get_shape(tag, dico):
 	"""
@@ -65,7 +62,6 @@ def get_shape(tag, dico):
 
 	"""
 	return dico[tag]
-
 
 def get_contour(img, edges, shape):
 	"""
@@ -94,6 +90,8 @@ def get_contour(img, edges, shape):
 		value_for_epsilon = 0.02
 	elif shape == 0 or shape ==1 or shape == 9 : # Triangle
 		value_for_epsilon = 0.15
+	elif shape == 3: # Losange
+		value_for_epsilon = 0.05
 	else:
 		value_for_epsilon = 0.15
 	# Finding contours in the image
@@ -111,8 +109,6 @@ def get_contour(img, edges, shape):
 	#cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
 	#cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
 	return approx, sides
-
-
 
 def get_center_in_cropped_sign(img, shape, imgEdges, contour_sign, number_of_sides):
 	"""
@@ -163,7 +159,6 @@ def get_center_in_cropped_sign(img, shape, imgEdges, contour_sign, number_of_sid
 	else: ## Circle or unrecognized shape case
 		center_sign = get_center_circle(img, contour_sign)
 	return center_sign
-
 
 def get_image_center(img):
 	"""
@@ -221,7 +216,7 @@ def get_center_triangle(img, contour_sign, boolean):
 	y = math.ceil((coord_x_min[1] + coord_x_max[1] + coord_y_min[1])/3)
 	center = (x,y)
 
-	plotting.show_image_triangle(img, coord_x_min, coord_x_max, coord_y_min, center)
+	#plotting.show_image_triangle(img, coord_x_min, coord_x_max, coord_y_min, center)
 	return center
 
 def get_center_circle(img, contour):
@@ -287,7 +282,7 @@ def get_center_rectangle(img, contour):
 	corners.append(coord_x_max)
 	corners.append(coord_y_min)
 	corners.append(coord_y_max)
-	plotting.show_image_rectangle(img, corners, center)
+	#plotting.show_image_rectangle(img, corners, center)
 	
 	return center
 	
@@ -318,7 +313,6 @@ def find_center_in_original_picture(img, center, x, y):
 	final_y = y + center[1]
 	return (final_x,final_y)
 
-
 def make_liste_contour(contour):
 	'''
 	Formatting function making a contour, which is a ndarray, a 
@@ -343,7 +337,6 @@ def make_liste_contour(contour):
 		coord = (x,y)
 		list_pixels.append(coord)
 	return list_pixels
-
 
 def get_sign_height(img, contour, shape, tag):
 	"""
@@ -494,20 +487,18 @@ def get_sign_height_rectangle(img, contour, tag):
 		else:
 			# Case of the intern contour
 			
-			print(top_left, top_right, bottom_left, bottom_right)
-			cv2.circle(img, top_left, 1, (255, 0, 0), 2) # bleu
-			cv2.circle(img, top_right, 1, (0, 255, 0), 2) # vert
-			cv2.circle(img, bottom_left, 1, (0, 255, 255), 2) # jaune
-			cv2.circle(img, bottom_right, 1, (255, 0, 255), 2) # magenta
-			print(middle_bottom, middle_top)
-			cv2.circle(img, middle_top, 1, (255, 255, 255), 2) # blanc
-			cv2.circle(img, middle_bottom, 1, (0, 0, 0), 2) # noir
+# 			cv2.circle(img, top_left, 1, (255, 0, 0), 2) # bleu
+# 			cv2.circle(img, top_right, 1, (0, 255, 0), 2) # vert
+# 			cv2.circle(img, bottom_left, 1, (0, 255, 255), 2) # jaune
+# 			cv2.circle(img, bottom_right, 1, (255, 0, 255), 2) # magenta
+# 			
+# 			cv2.circle(img, middle_top, 1, (255, 255, 255), 2) # blanc
+# 			cv2.circle(img, middle_bottom, 1, (0, 0, 0), 2) # noir
 			
 			# Calculation of the image contour
 			imgGray = BGRtoGRAY(img)
 			imgEdges = DetectionContours(imgGray)
 			
-			plotting.show_image(imgEdges, "gray")
 			middle_top_prime, middle_bottom_prime = middle_top, middle_bottom
 			
 			# Calculation of the equation of the line representing the height
@@ -516,7 +507,7 @@ def get_sign_height_rectangle(img, contour, tag):
 				a = (middle_top[1] - middle_bottom[1])/(middle_bottom[0] - middle_top[0])
 				b = middle_top[1] + a * middle_top[0]
 				
-				# We check the pixels above middle_top to see which one is on the image contour
+				# We check the pixels above middle top to see which one is on the image contour
 				for y in range(middle_top[1] - 5, -1, -1):
 					xCalculated = (b - y) / a
 					# Is the point on an image contour ?
@@ -528,7 +519,7 @@ def get_sign_height_rectangle(img, contour, tag):
 						middle_top_prime = (int(xCalculated) - 1, y)
 						break
 				
-				# We do the same for middle_bottom, for the points under middle_bottom
+				# We do the same for middle_bottom, for points under middle bottom
 				for y in range(middle_bottom[1] + 5, img.shape[0]):
 					xCalculated = (b - y) / a
 					# Is the point on an image contour ?
@@ -543,14 +534,14 @@ def get_sign_height_rectangle(img, contour, tag):
 				# It is a vertical line, represented by : x = c
 				c = middle_top[0]
 				
-				# Check if points above middle_top are on the contour too
+				# Check if points above middle top are on the contour too
 				for y in range(middle_top[1] - 2, -1, -1):
 					# Is the point on an image contour ?
 					if imgEdges[y, c] == 255:
 						middle_top_prime = (c, y)
 						break
 				
-				# Same with points under p4
+				# Same with points under the middle bottom
 				for y in range(middle_bottom[1] + 2, img.shape[0]):
 					# Is the point on an image contour ?
 					if imgEdges[y, c] == 255:
@@ -560,39 +551,102 @@ def get_sign_height_rectangle(img, contour, tag):
 			height_calculated = distance(middle_bottom_prime, middle_top_prime)
 			
 			cv2.line(img, middle_bottom_prime, middle_top_prime, (255, 0, 255), 1)
-			return height_calculated
 		
 	elif tag in diamond_cases: # Color : yellow
+		# Pixel gap
+		pixel = 10
 		# In the case of the diamond, we must redefine the points
 		top = min(list_pixels, key=lambda coord: coord[1])
 		bottom = max(list_pixels, key=lambda coord: coord[1])
 		right = max(list_pixels, key=lambda coord: coord[0])
 		left = min(list_pixels, key=lambda coord: coord[0])
-		color1 = get_pixel_rgb(img, top[0], top[1]+4)
-		color2 = get_pixel_rgb(img, bottom[0], bottom[1]-4)
-		color3 = get_pixel_rgb(img, left[0] + 4, left[1])
-		color4 = get_pixel_rgb(img, right[0] - 4, right[1])
+		color1 = get_pixel_rgb(img, top[0], top[1] + pixel)
+		color2 = get_pixel_rgb(img, bottom[0], bottom[1] - pixel)
+		color3 = get_pixel_rgb(img, left[0] + pixel, left[1])
+		color4 = get_pixel_rgb(img, right[0] - pixel, right[1])
 		
 		list_colors = (color1, color2, color3, color4)
-		verif = []
+		yellowColors = []
 		for color in list_colors: # Tchecking the color
-			R = color[0]
-			G = color[1]
-			B = color[2]
-			J = int(R) + int(G)
-			if B < 0.75 * J: # Do we have a yellow color ?
-				verif.append(B)
-		if len(verif)>=3:
+			R = color[0] / 255
+			G = color[1] / 255
+			B = color[2] / 255
+			# Yellow = less than 10% of blue, more than 30% of red and 20% of green
+			if B < 0.1 and R > 0.3 and G > 0.2:
+				yellowColors.append(True)
+		# If more than 3 yellow colors are detected, we are in the intern contour
+		if len(yellowColors) < 3:
 			# Case of the extern contour
 			# we calculate the height
+			cv2.line(img, bottom, top, (255, 0, 255), 1)
 			height_calculated = distance(top, bottom)
 		else:
 			# Case of the intern contour
-			# TODO
-			return None
+			
+# 			cv2.circle(img, top, 1, (255, 0, 0), 2) # bleu
+# 			cv2.circle(img, right, 1, (0, 255, 0), 2) # vert
+# 			cv2.circle(img, left, 1, (0, 255, 255), 2) # jaune
+# 			cv2.circle(img, bottom, 1, (255, 0, 255), 2) # magenta
+			
+			# Calculation of the image contour
+			imgGray = BGRtoGRAY(img)
+			imgEdges = DetectionContours(imgGray)
+			
+			top_prime, bottom_prime = top, bottom
+			
+			# Calculation of the equation of the line representing the height
+			if top[0] != bottom[0]:
+				# y = b - ax because the origin is in the top left corner
+				a = (top[1] - bottom[1])/(bottom[0] - top[0])
+				b = top[1] + a * top[0]
+				
+				# We check the pixels above the top to see which one is on the image contour
+				for y in range(top[1] - 5, -1, -1):
+					xCalculated = (b - y) / a
+					# Is the point on an image contour ?
+					if imgEdges[y, int(xCalculated)] == 255:
+						top_prime = (int(xCalculated), y)
+						break
+					# Because we approximate the value of x, we look in the previous pixel too
+					elif imgEdges[y, int(xCalculated) - 1] == 255:
+						top_prime = (int(xCalculated) - 1, y)
+						break
+				
+				# We do the same for the bottom, for points under middle bottom
+				for y in range(bottom[1] + 5, img.shape[0]):
+					xCalculated = (b - y) / a
+					# Is the point on an image contour ?
+					if imgEdges[y, int(xCalculated)] == 255:
+						bottom_prime = (int(xCalculated), y)
+						break
+					# Because we approximate the value of x, we look in the previous pixel too
+					elif imgEdges[y, int(xCalculated) - 1] == 255:
+						bottom_prime = (int(xCalculated) - 1, y)
+						break
+			else:
+				# It is a vertical line, represented by : x = c
+				c = top[0]
+				
+				# Check if points above the top are on the contour too
+				for y in range(top[1] - 2, -1, -1):
+					# Is the point on an image contour ?
+					if imgEdges[y, c] == 255:
+						top_prime = (c, y)
+						break
+				
+				# Same with points under the bottom
+				for y in range(bottom[1] + 2, img.shape[0]):
+					# Is the point on an image contour ?
+					if imgEdges[y, c] == 255:
+						bottom_prime = (c, y)
+						break
+			
+			height_calculated = distance(bottom_prime, top_prime)
+			cv2.line(img, bottom_prime, top_prime, (255, 0, 255), 1)
+	
+	# Else, the contour is always the good one and the calcul is simple
 	else:
 		height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2
-
 		cv2.line(img, middle_bottom, middle_top, (255, 0, 255), 1)
 	
 	return height_calculated
@@ -717,7 +771,6 @@ def get_sign_height_triangle(img, contour, boolean):
 	
 	return height_calculated
 
-
 def distance(point1, point2):
 	"""
 	
@@ -764,7 +817,6 @@ def get_pixel_rgb(img, row, col):
 	
 	real_color = [R,G,B]
 	return real_color
-
 
 def is_the_sign_treatable(img, contour, number_of_sides, shape):
 	"""
@@ -832,7 +884,6 @@ if __name__ == '__main__':
 	dico = csv_reader(dictionnaire_source)
 	
 	folder = "./DATA_BASE_SIMULEE"
-	
 	dirs = os.listdir(folder)
 	for category in dirs: # On récupère chaque nom de dossier
 		print("CATEGORY ", category)
@@ -841,13 +892,12 @@ if __name__ == '__main__':
 		else:
 			tag = category
 		
-		count = 1
+		count = 0
 		workfolder = os.listdir(folder+ "/" + category) #On construit les chemins d'accès
 		for file in workfolder: # On parcourt chaque catégorie de panneau
-			# print(folder + "/" + category + "/" + file)
 			count += 1
 			picture_path = folder+ "/" + category + "/" + file
-			#print("PICTURE PATH ", picture_path)
+			print("PICTURE PATH ", picture_path)
 			img = cv2.imread(picture_path) # Reading the image with cv2
 			imgGray = BGRtoGRAY(img) # On la transforme en niveaux de gris
 			imgEdges = DetectionContours(imgGray) # Finding the contours of the image
@@ -857,6 +907,7 @@ if __name__ == '__main__':
 			approximated_polygon, number_of_sides = get_contour(img, imgEdges, shape)
 			center_in_cropped_sign = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
 			if center_in_cropped_sign is None:
+				print("CONTINUUUUUE")
 				continue
 			try:
 				istreatable = is_the_sign_treatable(img, approximated_polygon, number_of_sides, shape)
@@ -869,7 +920,7 @@ if __name__ == '__main__':
 			w,h,x,y = extraction.get_whxy_from_img_path(picture_path) # Getting the cropped sign informations
 			final_center = find_center_in_original_picture(img, center_in_cropped_sign, x, y) # Getting the center of the sign in the original image from panoramax
 			#print("FINAL CENTER ", final_center)
-			#plotting.show_image(img, title='Objects Detected')
 			
+			cv2.circle(img, center_in_cropped_sign, 1, (0, 255, 0), 2)
 			height_sign = get_sign_height(img, approximated_polygon, shape, tag) # Getting the height of the sign
-			plotting.show_image(img, title='Objects Detected')
+			plotting.show_image(img, title='Center and height')
