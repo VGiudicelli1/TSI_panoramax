@@ -68,12 +68,14 @@ CREATE TABLE public.cropped_sign
 	id SERIAL NOT NULL,
 	picture_id CHARACTER VARYING NOT NULL,
 	sign_id INTEGER DEFAULT NULL,
-    "filename" CHARACTER VARYING NOT NULL,
-	geom GEOMETRY(POINT, 4326) DEFAULT NULL,
+	"filename" CHARACTER VARYING NOT NULL,
 	x FLOAT,
 	y FLOAT,
-	dz FLOAT,
-    bbox CHARACTER VARYING,
+	dz FLOAT,		
+	sdf FLOAT,		-- size_dist_factor: dist = size * sdf
+	gisement FLOAT,		-- in degrees from North
+	orientation FLOAT,	-- in degrees from North
+	bbox CHARACTER VARYING,
 	code CHARACTER VARYING(16) NOT NULL,
 	"value" CHARACTER VARYING(256) DEFAULT NULL,
 	
