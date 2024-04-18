@@ -46,8 +46,8 @@ def df_to_insert(df, df_keys, struct, pg_table, pg_columns):
 def init_tests():
     assert "test" in _config["database"]
     seq_id = "a957f734-e816-4c1d-af36-7f35deea2b78"
-    photo = pd.read_csv(__path__ + "/../../data_test/cropped_signs/photo.csv")
-    imagette = pd.read_csv(__path__ + "/../../data_test/cropped_signs/imagette.csv")
+    photo = pd.read_csv(__path__ + "/../data_test/cropped_signs/photo.csv")
+    imagette = pd.read_csv(__path__ + "/../data_test/cropped_signs/imagette.csv")
     photo["id_seq"] = seq_id
     photo["width"] = 5760
     photo["height"] = 2880
@@ -69,9 +69,9 @@ def init_tests():
             cur.execute(df_to_insert(
                 imagette,
                 ("id", "source", "x", "y", "dz", "code", "value"),
-                "('{0}', '{1}', {2}, {3}, {4}, '{5}', '{6}')",
+                "('{1}', {2}, {3}, {4}, '{5}', '{6}', 'nofilename')",
                 "cropped_sign",
-                ("id", "picture_id", "x", "y", "dz", "code", "value")
+                ("picture_id", "x", "y", "dz", "code", "value", "filename")
             ))
 
             conn.commit()
