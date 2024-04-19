@@ -69,6 +69,9 @@ if __name__ == "__main__":
             ["003", 20,  0,  "B1", None, 160.0,  -45.000000, 10.606602],
         ], columns=("source_id", "source_E", "source_N", "code", "value", "orientation", "gisement", "sdf"))
 
+        # test without orientation
+        data.loc[:, "orientation"] = 0
+
         size = len(data)
         data.source_E    += np.random.normal(loc=0, scale=0.5*noise, size=size)
         data.source_N    += np.random.normal(loc=0, scale=0.5*noise, size=size)

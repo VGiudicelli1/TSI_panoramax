@@ -95,6 +95,9 @@ def test_compatible_position():
 
 def test_compatible_matrix():
     detections = make_dataset(0)
+
+    # test without orientation
+    detections.loc[:, "orientation"] = 0
     
     compat_mat, index, rindex = compatible_matrix(detections)
     compat_mat_2 = np.array([

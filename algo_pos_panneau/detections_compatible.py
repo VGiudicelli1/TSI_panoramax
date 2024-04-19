@@ -114,7 +114,7 @@ def are_detections_compatibles(detections, seuils=default_seuils):
         are_source_compatible(detections, seuils=seuils)
         and are_code_compatibles(detections, seuils=seuils)
         and are_values_compatibles(detections, seuils=seuils)
-        #and are_orientations_compatibles(detections, seuils=seuils)
+        and are_orientations_compatibles(detections, seuils=seuils)
         and are_positions_compatibles(detections, seuils=seuils)
     )
 
