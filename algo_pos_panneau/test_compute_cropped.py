@@ -37,7 +37,7 @@ def test_compute_result_gisement():
 
     assert data.loc[0, "gisement"] == approx(21.3)
     assert data.loc[1, "gisement"] == approx(21.3-90)
-    assert data.loc[2, "gisement"] == approx(21.3+180)
+    assert data.loc[2, "gisement"] == approx(21.3-180)
 
 def test_compute_result_sdf():
     data = pd.DataFrame([
