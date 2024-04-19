@@ -10,19 +10,11 @@ def compute_mat_sim(mat):
     return mat_sim
 
 def clusterise_mat(compat_mat, steps=10, displayer=None):
-    n = compat_mat.shape[0]
     for step in range(steps):
         mat_sim = compute_mat_sim(compat_mat)
 
-    if displayer:
-        displayer(compat_mat, mat_sim, step, steps)
-        # displaying
-        """
-        if not has_been_closed(ax1):
-            ax1.matshow(compat_mat)
-            ax2.matshow(mat2)
-            plt.waitforbuttonpress()
-        """
+        if displayer:
+            displayer(compat_mat, mat_sim, step, steps)
 
         # seuil & reassign
         compat_mat *= mat_sim >= (step+1)/steps
@@ -87,7 +79,6 @@ if __name__ == "__main__":
         return data
 
     detections = make_dataset(0)
-
     print(detections)
 
     compat_mat, index, rindex = compatible_matrix(detections)
