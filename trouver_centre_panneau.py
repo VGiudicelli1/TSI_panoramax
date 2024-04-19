@@ -106,8 +106,6 @@ def get_contour(img, edges, shape):
 	approx = cv2.approxPolyDP(largest_contour, epsilon, True) # Approximation
 	sides = len(approx) # Number of sides of the polygon, to know if we found the good form
 	# x_min, x_max, y_min, y_max = which_circle(img, largest_contour)
-	#cv2.drawContours(img, [largest_contour], -1, (0, 255, 0), 2)
-	#cv2.drawContours(img, [approx], -1, (255, 0, 0), 2)
 	return approx, sides
 
 def get_center_in_cropped_sign(img, shape, imgEdges, contour_sign, number_of_sides):
@@ -395,20 +393,21 @@ def get_sign_height_circle(img, contour, tag):
 
 	"""
 	liste_pixels = make_liste_contour(contour)
-
-	p1 = min(liste_pixels, key=lambda coord: coord[0])
-	p2 = max(liste_pixels, key=lambda coord: coord[0])
-	p3 = min(liste_pixels, key=lambda coord: coord[1])
-	p4 = max(liste_pixels, key=lambda coord: coord[1])
 	
+	left = min(liste_pixels, key=lambda coord: coord[0])
+	right = max(liste_pixels, key=lambda coord: coord[0])
+	top = min(liste_pixels, key=lambda coord: coord[1])
+	bottom = max(liste_pixels, key=lambda coord: coord[1])
+		
 	# We take the center y of the top and bottom points
-	middle_bottom = (int((p3[0] + p4[0])/2), p4[1])
-	middle_top = (int((p3[0] + p4[0])/2), p3[1])
+	middle_bottom = (int((top[0] + bottom[0])/2), bottom[1])
+	middle_top = (int((top[0] + bottom[0])/2), top[1])
 	
-	color1 = get_pixel_rgb(img, p1[0] + 4, p1[1])
-	color2 = get_pixel_rgb(img, p2[0] - 4, p2[1])
-	color3 = get_pixel_rgb(img, p3[0], p3[1] + 4)
-	color4 = get_pixel_rgb(img, p4[0], p4[1] - 4)
+	# Check if it is an intern or extern contour by looking at the colors
+	color1 = get_pixel_rgb(img, left[0] + 4, left[1])
+	color2 = get_pixel_rgb(img, right[0] - 4, right[1])
+	color3 = get_pixel_rgb(img, top[0], top[1] + 4)
+	color4 = get_pixel_rgb(img, bottom[0], bottom[1] - 4)
 	liste_couleurs = (color1, color2, color3, color4)
 	verif = []
 
@@ -420,68 +419,16 @@ def get_sign_height_circle(img, contour, tag):
 		if R > 0.75*C:
 			verif.append(R)
 			
+	# Extern contour if more than 3 colours are detected
+	# It works also for the stop sign
 	if len(verif)>=3:
-		# Intern contour
 		height_calculated = distance(middle_bottom, middle_top)
 		cv2.line(img, middle_top, middle_bottom, (255, 255, 0), 1) # cyan
 		
+	# Intern contour
 	else:
-		# Extern contour
-		imgGray = BGRtoGRAY(img)
-		imgEdges = DetectionContours(imgGray)
+		height_calculated = calcul_height_intern_coutour(img, middle_top, middle_bottom)
 		
-		middle_top_prime, middle_bottom_prime = middle_top, middle_bottom
-		
-		# Calculation of the equation of the line representing the height
-		if middle_top[0] != middle_bottom[0]:
-			# y = b - ax because the origin is in the top left corner
-			a = (middle_top[1] - middle_bottom[1])/(middle_bottom[0] - middle_top[0])
-			b = middle_top[1] + a * middle_top[0]
-			
-			# We check the pixels above middle top to see which one is on the image contour
-			for y in range(middle_top[1] - 5, -1, -1):
-				xCalculated = (b - y) / a
-				# Is the point on an image contour ?
-				if imgEdges[y, int(xCalculated)] == 255:
-					middle_top_prime = (int(xCalculated), y)
-					break
-				# Because we approximate the value of x, we look in the previous pixel too
-				elif imgEdges[y, int(xCalculated) - 1] == 255:
-					middle_top_prime = (int(xCalculated) - 1, y)
-					break
-			
-			# We do the same for middle_bottom, for points under middle bottom
-			for y in range(middle_bottom[1] + 5, img.shape[0]):
-				xCalculated = (b - y) / a
-				# Is the point on an image contour ?
-				if imgEdges[y, int(xCalculated)] == 255:
-					middle_bottom_prime = (int(xCalculated), y)
-					break
-				# Because we approximate the value of x, we look in the previous pixel too
-				elif imgEdges[y, int(xCalculated) - 1] == 255:
-					middle_bottom_prime = (int(xCalculated) - 1, y)
-					break
-		else:
-			# It is a vertical line, represented by : x = c
-			c = middle_top[0]
-			
-			# Check if points above middle top are on the contour too
-			for y in range(middle_top[1] - 2, -1, -1):
-				# Is the point on an image contour ?
-				if imgEdges[y, c] == 255:
-					middle_top_prime = (c, y)
-					break
-			
-			# Same with points under the middle bottom
-			for y in range(middle_bottom[1] + 2, img.shape[0]):
-				# Is the point on an image contour ?
-				if imgEdges[y, c] == 255:
-					middle_bottom_prime = (c, y)
-					break
-		
-		height_calculated = distance(middle_bottom_prime, middle_top_prime)
-		cv2.line(img, middle_bottom_prime, middle_top_prime, (255, 255, 0), 1)
-
 	return height_calculated
 
 def get_sign_height_rectangle(img, contour, tag):
@@ -521,9 +468,9 @@ def get_sign_height_rectangle(img, contour, tag):
 	middle_bottom = (int(((bottom_left[0] + bottom_right[0])/2)),
 			int(((bottom_left[1] + bottom_right[1])/2)))
 	
-	# Case disjonction
-	if tag in blue_square_cases: # Color : blue
-		# Let's take a look at the colors near interest points
+	# Case for blue square signs
+	if tag in blue_square_cases:
+		# Check if it is an intern or extern contour by looking at the colors
 		color1 = get_pixel_rgb(img, top_left[0] + 4, top_left[1]+4)
 		color2 = get_pixel_rgb(img, top_right[0] - 4, top_right[1]+4)
 		color3 = get_pixel_rgb(img, bottom_left[0] + 4, bottom_left[1]-4)
@@ -531,87 +478,35 @@ def get_sign_height_rectangle(img, contour, tag):
 		
 		list_colors = (color1, color2, color3, color4)
 		verif = []
-		for color in list_colors: # Tchecking the color
+		
+		for color in list_colors:
 			R = color[0]
 			G = color[1]
 			B = color[2]
 			J = int(R) + int(G)
 			if B > 0.75 * J:
-				verif.append(B)
+				verif.append(B)	
+				
+		# Extern contour if at least 3 points are blue
 		if len(verif)>=3:
-			# Case of the extern contour
-			# We calculate the height
 			height_calculated = (distance(top_left, bottom_left) + distance(top_right, bottom_right)) / 2
-			
 			cv2.line(img, middle_bottom, middle_top, (255, 0, 255), 1)
+			
+		# Intern contour
 		else:
-			# Intern contour
-			
-			# Calculation of the image contour
-			imgGray = BGRtoGRAY(img)
-			imgEdges = DetectionContours(imgGray)
-			
-			middle_top_prime, middle_bottom_prime = middle_top, middle_bottom
-			
-			# Calculation of the equation of the line representing the height
-			if middle_top[0] != middle_bottom[0]:
-				# y = b - ax because the origin is in the top left corner
-				a = (middle_top[1] - middle_bottom[1])/(middle_bottom[0] - middle_top[0])
-				b = middle_top[1] + a * middle_top[0]
-				
-				# We check the pixels above middle top to see which one is on the image contour
-				for y in range(middle_top[1] - 5, -1, -1):
-					xCalculated = (b - y) / a
-					# Is the point on an image contour ?
-					if imgEdges[y, int(xCalculated)] == 255:
-						middle_top_prime = (int(xCalculated), y)
-						break
-					# Because we approximate the value of x, we look in the previous pixel too
-					elif imgEdges[y, int(xCalculated) - 1] == 255:
-						middle_top_prime = (int(xCalculated) - 1, y)
-						break
-				
-				# We do the same for middle_bottom, for points under middle bottom
-				for y in range(middle_bottom[1] + 5, img.shape[0]):
-					xCalculated = (b - y) / a
-					# Is the point on an image contour ?
-					if imgEdges[y, int(xCalculated)] == 255:
-						middle_bottom_prime = (int(xCalculated), y)
-						break
-					# Because we approximate the value of x, we look in the previous pixel too
-					elif imgEdges[y, int(xCalculated) - 1] == 255:
-						middle_bottom_prime = (int(xCalculated) - 1, y)
-						break
-			else:
-				# It is a vertical line, represented by : x = c
-				c = middle_top[0]
-				
-				# Check if points above middle top are on the contour too
-				for y in range(middle_top[1] - 2, -1, -1):
-					# Is the point on an image contour ?
-					if imgEdges[y, c] == 255:
-						middle_top_prime = (c, y)
-						break
-				
-				# Same with points under the middle bottom
-				for y in range(middle_bottom[1] + 2, img.shape[0]):
-					# Is the point on an image contour ?
-					if imgEdges[y, c] == 255:
-						middle_bottom_prime = (c, y)
-						break
-			
-			height_calculated = distance(middle_bottom_prime, middle_top_prime)
-			
-			cv2.line(img, middle_bottom_prime, middle_top_prime, (255, 0, 255), 1)
-		
-	elif tag in diamond_cases: # Color : yellow
-		# Pixel gap
+			height_calculated = calcul_height_intern_coutour(img, middle_top, middle_bottom)
+	
+	# Diamond signs are always yellow
+	elif tag in diamond_cases:
+		# Pixel gap for the color checking
 		pixel = 10
 		# In the case of the diamond, we must redefine the points
 		top = min(list_pixels, key=lambda coord: coord[1])
 		bottom = max(list_pixels, key=lambda coord: coord[1])
 		right = max(list_pixels, key=lambda coord: coord[0])
 		left = min(list_pixels, key=lambda coord: coord[0])
+		
+		# Check if it is an intern or extern contour by looking at the colors
 		color1 = get_pixel_rgb(img, top[0], top[1] + pixel)
 		color2 = get_pixel_rgb(img, bottom[0], bottom[1] - pixel)
 		color3 = get_pixel_rgb(img, left[0] + pixel, left[1])
@@ -619,77 +514,21 @@ def get_sign_height_rectangle(img, contour, tag):
 		
 		list_colors = (color1, color2, color3, color4)
 		yellowColors = []
-		for color in list_colors: # Tchecking the color
+		for color in list_colors:
 			R = color[0] / 255
 			G = color[1] / 255
 			B = color[2] / 255
 			# Yellow = less than 10% of blue, more than 30% of red and 20% of green
 			if B < 0.1 and R > 0.3 and G > 0.2:
 				yellowColors.append(True)
-		# If more than 3 yellow colors are detected, we are in the intern contour
+
+		# Extern contour if more than 3 points are yellow
 		if len(yellowColors) < 3:
-			# Case of the extern contour
-			# we calculate the height
-			cv2.line(img, bottom, top, (255, 0, 255), 1)
 			height_calculated = distance(top, bottom)
+			cv2.line(img, bottom, top, (255, 0, 255), 1)
+		# Intern contour
 		else:
-			# Case of the intern contour
-			
-			# Calculation of the image contour
-			imgGray = BGRtoGRAY(img)
-			imgEdges = DetectionContours(imgGray)
-			
-			top_prime, bottom_prime = top, bottom
-			
-			# Calculation of the equation of the line representing the height
-			if top[0] != bottom[0]:
-				# y = b - ax because the origin is in the top left corner
-				a = (top[1] - bottom[1])/(bottom[0] - top[0])
-				b = top[1] + a * top[0]
-				
-				# We check the pixels above the top to see which one is on the image contour
-				for y in range(top[1] - 5, -1, -1):
-					xCalculated = (b - y) / a
-					# Is the point on an image contour ?
-					if imgEdges[y, int(xCalculated)] == 255:
-						top_prime = (int(xCalculated), y)
-						break
-					# Because we approximate the value of x, we look in the previous pixel too
-					elif imgEdges[y, int(xCalculated) - 1] == 255:
-						top_prime = (int(xCalculated) - 1, y)
-						break
-				
-				# We do the same for the bottom, for points under middle bottom
-				for y in range(bottom[1] + 5, img.shape[0]):
-					xCalculated = (b - y) / a
-					# Is the point on an image contour ?
-					if imgEdges[y, int(xCalculated)] == 255:
-						bottom_prime = (int(xCalculated), y)
-						break
-					# Because we approximate the value of x, we look in the previous pixel too
-					elif imgEdges[y, int(xCalculated) - 1] == 255:
-						bottom_prime = (int(xCalculated) - 1, y)
-						break
-			else:
-				# It is a vertical line, represented by : x = c
-				c = top[0]
-				
-				# Check if points above the top are on the contour too
-				for y in range(top[1] - 2, -1, -1):
-					# Is the point on an image contour ?
-					if imgEdges[y, c] == 255:
-						top_prime = (c, y)
-						break
-				
-				# Same with points under the bottom
-				for y in range(bottom[1] + 2, img.shape[0]):
-					# Is the point on an image contour ?
-					if imgEdges[y, c] == 255:
-						bottom_prime = (c, y)
-						break
-			
-			height_calculated = distance(bottom_prime, top_prime)
-			cv2.line(img, bottom_prime, top_prime, (255, 0, 255), 1)
+			height_calculated = calcul_height_intern_coutour(img, top, bottom)
 	
 	# Else, the contour is always the good one and the calcul is simple
 	else:
@@ -719,29 +558,30 @@ def get_sign_height_triangle(img, contour, boolean):
 
 	"""
 	list_pixels = make_liste_contour(contour)
-	# We get the coords of the vertex of the triangle
-	p1 = min(list_pixels, key=lambda coord: coord[0])
-	p2 = max(list_pixels, key=lambda coord: coord[0])
-	# p3 is the vertex at the top of the image, p4 is at the bottom of it
-	if boolean == True:
-		p3 = min(list_pixels, key=lambda coord: coord[1])
-		color3 = get_pixel_rgb(img, p3[0], p3[1] + 4)
-		
-		x = math.ceil((p1[0] + p2[0])/2)
-		y = math.ceil((p1[1] + p2[1])/2)
-		p4 = (x,y)
-	else:
-		p4 = max(list_pixels, key=lambda coord: coord[1])
-		color3 = get_pixel_rgb(img, p4[0], p4[1] - 4)
-		
-		x = math.ceil((p1[0] + p2[0])/2)
-		y = math.ceil((p1[1] + p2[1])/2)
-		p3 = (x,y)
+	# We get the coords of the right and left vertices of the triangle
+	left = min(list_pixels, key=lambda coord: coord[0])
+	right = max(list_pixels, key=lambda coord: coord[0])
 	
-	# Looking at the internals pixels colors to know if we have
-	# a intern or extern contour
-	color1 = get_pixel_rgb(img, p1[0] + 4, p1[1]-4)
-	color2 = get_pixel_rgb(img, p2[0] - 4, p2[1]-4)
+	# Depending on the sign orientation, we do not calculate the top and bottom
+	# points the same way
+	if boolean == True:
+		top = min(list_pixels, key=lambda coord: coord[1])
+		color3 = get_pixel_rgb(img, top[0], top[1] + 4)
+		
+		x = math.ceil((left[0] + right[0])/2)
+		y = math.ceil((left[1] + right[1])/2)
+		bottom = (x,y)
+	else:
+		bottom = max(list_pixels, key=lambda coord: coord[1])
+		color3 = get_pixel_rgb(img, bottom[0], bottom[1] - 4)
+		
+		x = math.ceil((left[0] + right[0])/2)
+		y = math.ceil((left[1] + right[1])/2)
+		top = (x,y)
+	
+	# Check if it is an intern or extern contour by looking at the colors
+	color1 = get_pixel_rgb(img, left[0] + 4, left[1] - 4)
+	color2 = get_pixel_rgb(img, right[0] - 4, right[1] - 4)
 	
 	list_colors = (color1, color2, color3)
 	verif = []
@@ -754,69 +594,97 @@ def get_sign_height_triangle(img, contour, boolean):
 		if R > 0.75 * C:
 			verif.append(R)
 			
+	# Extern contour
 	if len(verif)>=2:
-		## Case of the extern contour
-		height_calculated = distance(p3,p4)
-		cv2.line(img, p3, p4, (255, 0, 255), 1)
+		height_calculated = distance(top, bottom)
+		cv2.line(img, top, bottom, (255, 0, 255), 1)
+		
+	# Intern contour
 	else:
-		## Case of the intern contour
-		# Calculation of the image contour
-		imgGray = BGRtoGRAY(img)
-		imgEdges = DetectionContours(imgGray)
-		
-		# Calculation of the equation of the line representing the height
-		if p3[0] != p4[0]:
-			# y = b - ax because the origin is in the top left corner
-			a = (p3[1] - p4[1])/(p4[0] - p3[0])
-			b = p3[1] + a * p3[0]
-			p3_prime, p4_prime = p3, p4
+		height_calculated = calcul_height_intern_coutour(img, top, bottom)
 			
-			# We check the pixels above p3 to see which one is on the image contour
-			for y in range(p3[1] - 2, -1, -1):
-				xCalculated = (b - y) / a
-				# Is the point on an image contour ?
-				if imgEdges[y, int(xCalculated)] == 255:
-					p3_prime = (int(xCalculated), y)
-					break
-				# Because we approximate the value of x, we look in the previous pixel too
-				elif imgEdges[y, int(xCalculated) - 1] == 255:
-					p3_prime = (int(xCalculated) - 1, y)
-					break
-			
-			# We do the same for p4, for the points under p4
-			for y in range(p4[1] + 2, img.shape[0]):
-				xCalculated = (b - y) / a
-				# Is the point on an image contour ?
-				if imgEdges[y, int(xCalculated)] == 255:
-					p4_prime = (int(xCalculated), y)
-					break
-				# Because we approximate the value of x, we look in the previous pixel too
-				elif imgEdges[y, int(xCalculated) - 1] == 255:
-					p4_prime = (int(xCalculated) - 1, y)
-					break
-		else:
-			# It is a vertical line, represented by : x = c
-			c = p3[0]
-			
-			# Check if points above p3 are on the contour too
-			for y in range(p3[1] - 2, -1, -1):
-				# Is the point on an image contour ?
-				if imgEdges[y, c] == 255:
-					p3_prime = (c, y)
-					break
-			
-			# Same with points under p4
-			for y in range(p4[1] + 2, img.shape[0]):
-				# Is the point on an image contour ?
-				if imgEdges[y, c] == 255:
-					p4_prime = (c, y)
-					break
-		
-		# We can then calculate the height
-		height_calculated = distance(p3_prime, p4_prime)
-		cv2.line(img, p3_prime, p4_prime, (255, 0, 255), 1)
-	
 	return height_calculated
+
+def calcul_height_intern_coutour(img, top, bottom):
+	"""
+	Return the height of the sign when wa have an intern contour.
+	The choice of which point to consider being the top and bottom of the sign
+	is made in other functions, not in this one.
+
+	Parameters
+	----------
+	img : numpy.ndarray
+		Image of the cropped sign.
+	top : tuple(int, int)
+		Point at the top of the intern contour.
+	bottom : tuple(int, int)
+		Point at the bottom of the intern contour.
+
+	Returns
+	-------
+	height : float
+		Height calculated of the sign.
+
+	"""
+	# Convert the image into the contours of it
+	imgGray = BGRtoGRAY(img)
+	imgEdges = DetectionContours(imgGray)
+	
+	# Points to calculate
+	top_prime, bottom_prime = top, bottom
+	
+	# Calculation of the equation of the line between the top and bottom points
+	if top[0] != bottom[0]:
+		# y = b - ax because the origin is in the top left corner
+		a = (top[1] - bottom[1])/(bottom[0] - top[0])
+		b = top[1] + a * top[0]
+		
+		# Check pixels above the top to see which one is on the image contour
+		for y in range(top[1] - 5, -1, -1):
+			xCalculated = (b - y) / a
+			# Is the point on an image contour ?
+			if imgEdges[y, int(xCalculated)] == 255:
+				top_prime = (int(xCalculated), y)
+				break
+			# Because we approximate the value of x, we look in the previous pixel too
+			elif imgEdges[y, int(xCalculated) - 1] == 255:
+				top_prime = (int(xCalculated) - 1, y)
+				break
+		
+		# We do the same for the bottom, for points under it
+		for y in range(bottom[1] + 5, img.shape[0]):
+			xCalculated = (b - y) / a
+			# Is the point on an image contour ?
+			if imgEdges[y, int(xCalculated)] == 255:
+				bottom_prime = (int(xCalculated), y)
+				break
+			# Because we approximate the value of x, we look in the previous pixel too
+			elif imgEdges[y, int(xCalculated) - 1] == 255:
+				bottom_prime = (int(xCalculated) - 1, y)
+				break
+	else:
+		# It is a vertical line, represented by : x = c
+		c = top[0]
+		
+		# Check if points above the top are on the contour too
+		for y in range(top[1] - 2, -1, -1):
+			# Is the point on an image contour ?
+			if imgEdges[y, c] == 255:
+				top_prime = (c, y)
+				break
+		
+		# Same with points under the bottom
+		for y in range(bottom[1] + 2, img.shape[0]):
+			# Is the point on an image contour ?
+			if imgEdges[y, c] == 255:
+				bottom_prime = (c, y)
+				break
+	
+	# Calculate the height by taking the distance between new top and bottom
+	height_calculated = distance(bottom_prime, top_prime)
+	cv2.line(img, bottom_prime, top_prime, (255, 255, 0), 1)
+	return height_calculated
+
 
 def distance(point1, point2):
 	"""
