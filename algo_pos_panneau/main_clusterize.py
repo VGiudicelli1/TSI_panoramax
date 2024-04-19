@@ -27,17 +27,19 @@ def load(conn):
                 """)
             detections = pd.DataFrame(
                 cur.fetchall(), 
-                columns=("id", "source_id", "source_E", "source_N", "code", "value", "orientation", "gisement", "sdf")
+                columns=("id", "source_id", "source_lng", "source_lat", "code", "value", "orientation", "gisement", "sdf")
                 )
-            
+            proj_geo_to_lambert_delta(detections, "source_lat", "source_lng", "source_E", "source_N")
+    
             cur.execute(f"""
                 SELECT id, ST_X(geom), ST_Y(geom), size, orientation, code, value
 	            FROM sign
                 """)
             panneaux = pd.DataFrame(
                 cur.fetchall(), 
-                columns=("id", "e", "n", "size", "orientation", "code", "value")
+                columns=("id", "lng", "lat", "size", "orientation", "code", "value")
                 )
+            proj_geo_to_lambert_delta(panneaux)
 
             conn.commit()
 
@@ -48,8 +50,8 @@ def load(conn):
 # clusterise
 
 def clusterise(detections):
-    # TODO
     compat_mat, index, rindex = compatible_matrix(detections)
+    print(compat_mat)
     cluster_mat = clusterise_mat(compat_mat)
     clusters = extract_clusters(cluster_mat)
     
