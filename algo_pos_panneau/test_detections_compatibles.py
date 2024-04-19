@@ -1,7 +1,7 @@
 from detections_compatible import are_detections_compatibles, are_orientations_compatibles, are_positions_compatibles, compatible_matrix
 import pandas as pd
-from pytest import approx
 import numpy as np
+
 
 def make_binary_matrix(df, fonc):
     n = len(df)
@@ -12,6 +12,7 @@ def make_binary_matrix(df, fonc):
             for i in range(n)] 
             for j in range(n) 
         ], dtype=np.uint8)
+
 
 def make_dataset(noise = 0):
     data = pd.DataFrame([
@@ -44,6 +45,7 @@ def test_compatible_unique_detection():
     assert     are_detections_compatibles(detections.loc[detections.index.isin([4])])
     assert     are_detections_compatibles(detections.loc[detections.index.isin([7])])
 
+
 def test_compatible_source():
     detections = pd.DataFrame([
         ["000",  0, 40, "B14", "30", -30.0,  116.565051, 11.180340],
@@ -54,6 +56,7 @@ def test_compatible_source():
     assert     are_detections_compatibles(detections.loc[detections.index.isin([0, 1])])
     assert not are_detections_compatibles(detections.loc[detections.index.isin([0, 2])])
 
+
 def test_compatible_code_face(): 
     detections = pd.DataFrame([
         ["000",  0, 40, "B14", "30", -30.0,  116.565051, 11.180340],
@@ -63,6 +66,7 @@ def test_compatible_code_face():
 
     assert not are_detections_compatibles(detections.loc[detections.index.isin([0, 1])])
     assert     are_detections_compatibles(detections.loc[detections.index.isin([0, 2])])
+
 
 def test_compatible_code_face_back(): 
     detections = pd.DataFrame([
@@ -80,6 +84,7 @@ def test_compatible_code_face_back():
     assert not are_detections_compatibles(detections.loc[detections.index.isin([0, 2])])
     assert     are_detections_compatibles(detections.loc[detections.index.isin([1, 2, 3])])
 
+
 def test_compatible_value(): 
     detections = pd.DataFrame([
         ["000",  0, 40, "B14", "30", -30.0,  116.565051, 11.180340],
@@ -93,6 +98,7 @@ def test_compatible_value():
     assert not are_detections_compatibles(detections.loc[detections.index.isin([0, 2])])
     assert not are_detections_compatibles(detections.loc[detections.index.isin([0, 3])])
     assert     are_detections_compatibles(detections.loc[detections.index.isin([0, 4])])
+
 
 def test_compatible_orientation():
     detections = pd.DataFrame([
@@ -117,6 +123,7 @@ def test_compatible_orientation():
          [0, 0, 1, 0, 0, 1, 0, 0],
          [0, 1, 0, 0, 0, 0, 1, 0],
          [1, 0, 0, 0, 0, 0, 0, 1]])
+
 
 def test_compatible_position():
     detections = pd.DataFrame([
@@ -143,6 +150,7 @@ def test_compatible_position():
          [1, 0, 1, 0, 1, 0, 1, 1],
          [0, 1, 0, 1, 0, 1, 1, 1]])
 
+
 def test_compatible_matrix():
     detections = make_dataset(0)
 
@@ -168,6 +176,7 @@ def test_compatible_matrix():
         compat_mat,
         compat_mat_2
         )
+
 
 if __name__ == "__main__":
     import pytest
