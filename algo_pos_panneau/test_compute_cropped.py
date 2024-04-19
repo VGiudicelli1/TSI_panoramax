@@ -1,4 +1,4 @@
-from compute_cropped_measurments import compute
+from main_compute_cropped_measurments import compute
 import pandas as pd
 from pytest import approx
 
