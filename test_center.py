@@ -41,7 +41,7 @@ def test_find_center_in_original_picture():
     real_center = (659,2529)
     assert(final_center[0] > (real_center[0]-10) & final_center[0] < (real_center[0] + 10))
     assert(final_center[1] > (real_center[1]-10) & final_center[1] < (real_center[1] + 10))
-
+    
     #Testing Circle Shape
     img = cv2.imread('data_test/test_B14.jpg')
     imgGray = trouver_centre_panneau.BGRtoGRAY(img)
