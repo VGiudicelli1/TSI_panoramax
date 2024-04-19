@@ -4,6 +4,7 @@ Fonctions utilitaires diverses
 from pyproj import Transformer as _Transformer
 from numpy import mean as _mean
 import numpy as np
+import math
 
 ###############################################################################
 ##  Projection                                                               ##
@@ -50,9 +51,15 @@ def proj_lambert_delta_to_geo(df, lat_column="lat", lng_column="lng", e_column="
 ##  Angles                                                                   ##
 ###############################################################################
 
-def format_angle_degrees(angles):
+def format_angle_deg(angles):
     """
     input: angles en degres (numpy array, ou scalaire)
     return: angles en degres entre -180 exclus et 180 inclus
     """
     return 180 - (180 - angles) % 360
+
+def mean_angles_rad(angles):
+    return np.arctan2(np.mean(np.sin(angles)), np.mean(np.cos(angles)))
+
+def mean_angles_deg(angles):
+    return mean_angles_rad(np.array(angles) / 180 * math.pi) * 180 / math.pi

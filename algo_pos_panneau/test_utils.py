@@ -1,6 +1,6 @@
-from utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo, format_angle_degrees
+from utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo, format_angle_deg, mean_angles_deg
 import pandas as pd
-
+from pytest import approx
 
 def test_proj():
     data = pd.DataFrame([
@@ -19,13 +19,17 @@ def test_proj():
 
 
 def test_format_angle():
-    assert format_angle_degrees(0) == 0
-    assert format_angle_degrees(-180) == 180
-    assert format_angle_degrees(90) == 90
-    assert format_angle_degrees(360) == 0
-    assert format_angle_degrees(270) == -90
-    assert format_angle_degrees(-90) == -90
+    assert format_angle_deg(0) == 0
+    assert format_angle_deg(-180) == 180
+    assert format_angle_deg(90) == 90
+    assert format_angle_deg(360) == 0
+    assert format_angle_deg(270) == -90
+    assert format_angle_deg(-90) == -90
 
+
+def test_mean_angle():
+    assert mean_angles_deg([0, 5]) == approx(2.5)
+    assert mean_angles_deg([-175, 165]) == approx(175)
 
 if __name__ == "__main__":
     import pytest

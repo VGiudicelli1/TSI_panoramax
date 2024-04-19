@@ -2,7 +2,7 @@ from database_connect import connect_db, DatabaseError
 import pandas as pd
 from math import pi
 import numpy as np
-from utils import format_angle_degrees
+from utils import format_angle_deg
 """
 compute gisement and sdf
 need:
@@ -54,25 +54,25 @@ def save(conn, data):
 
 def compute(detections):
     gisements = (detections.x / detections.source_width - 0.5) * detections.source_fov + detections.source_azimut
-    detections["gisement"] = format_angle_degrees(gisements)
+    detections["gisement"] = format_angle_deg(gisements)
 
     detections["sdf"] = detections.source_height / (detections.dz * 2 * pi)
 
 if __name__ == "__main__":
-    print("Connecting to database...\t\t", end="")
+    print("Connecting to database...\t\t\t", end="")
     conn, config = connect_db()
     print("Done")
     
-    print("Loading uncomputed cropped_signs...\t", end="")
+    print("Loading uncomputed cropped_signs...\t\t", end="")
     detections = load(conn)
     print(f"Done : {len(detections)} cropped_signs")
 
-    print("Computting gisement and sdf...\t\t", end="")
+    print("Computting gisement and sdf...\t\t\t", end="")
     compute(detections)
     print("Done")
     
-    print("Saving...\t\t\t\t", end="")
+    print("Saving...\t\t\t\t\t", end="")
     save(conn, detections)
     print("Done")
     
-    print("End")
+    print("Fin")
