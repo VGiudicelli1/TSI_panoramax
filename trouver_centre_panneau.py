@@ -246,7 +246,7 @@ def get_center_circle(img, contour):
 	mean_y = math.ceil(np.mean(list_y))
 	center = (mean_x,mean_y)
 	cv2.circle(img, center, 1, (0, 255, 0), -1)
-	plotting.show_image(img, title='Objects Detected')
+	#plotting.show_image(img, title='Objects Detected')
 	return center
 
 def get_center_rectangle(img, contour):
@@ -394,7 +394,6 @@ def get_sign_height_circle(img, contour, tag):
 		Height of the sign, in pixels.
 
 	"""
-	print(contour)
 	liste_pixels = make_liste_contour(contour)
 
 	p1 = min(liste_pixels, key=lambda coord: coord[0])
@@ -402,61 +401,32 @@ def get_sign_height_circle(img, contour, tag):
 	p3 = min(liste_pixels, key=lambda coord: coord[1])
 	p4 = max(liste_pixels, key=lambda coord: coord[1])
 	
+	# We take the center y of the top and bottom points
+	middle_bottom = (int((p3[0] + p4[0])/2), p4[1])
+	middle_top = (int((p3[0] + p4[0])/2), p3[1])
+	
 	color1 = get_pixel_rgb(img, p1[0] + 4, p1[1])
 	color2 = get_pixel_rgb(img, p2[0] - 4, p2[1])
 	color3 = get_pixel_rgb(img, p3[0], p3[1] + 4)
 	color4 = get_pixel_rgb(img, p4[0], p4[1] - 4)
 	liste_couleurs = (color1, color2, color3, color4)
 	verif = []
-	# For the stop sign, there are no extern or intern contour
-	if tag == "AB4":
-		
-		# We take the center y of the top and bottom points
-		middle_bottom = (int((p3[0] + p4[0])/2), p3[1])
-		middle_top = (int((p3[0] + p4[0])/2), p4[1])
-		
-		height_calculated = distance(middle_bottom, middle_top)
-		
-		print(middle_top, middle_bottom)
-		cv2.line(img, middle_top, middle_bottom, (255, 255, 0), 1) # cyan
-	else:
-		
-		for color in liste_couleurs:
-			R = color[0]
-			G =color[1]
-			B = color[2]
-			C = int(G) + int(B)
-			if R > 0.75*C:
-				verif.append(R)
-		if len(verif)>=3:
-			# Case of the extern contour
-			cv2.line(img, p1, p2, (0, 255, 255), 1)
-			cv2.line(img, p3, p4, (255, 255, 0), 1)
-			# We calculate the center of the base
-			height_calculated = (distance(p1,p2) + distance(p3, p4)) / 2
-		# For the stop sign 
-		else:
-			# Case of the intern contour
-			cv2.circle(img, p1, 1, (255, 0, 0), 2) # bleu
-			cv2.circle(img, p2, 1, (0, 255, 0), 2) # vert
-			cv2.circle(img, p3, 1, (0, 255, 255), 2) # jaune
-			cv2.circle(img, p4, 1, (255, 0, 255), 2) # magenta
+
+	for color in liste_couleurs:
+		R = color[0]
+		G =color[1]
+		B = color[2]
+		C = int(G) + int(B)
+		if R > 0.75*C:
+			verif.append(R)
 			
-			cv2.line(img, p1, p2, (0, 255, 255), 1)
-			cv2.line(img, p3, p4, (255, 255, 0), 1)
-			height_calculated = None
+	if len(verif)>=3:
+		# Intern contour
+		height_calculated = distance(middle_bottom, middle_top)
+		cv2.line(img, middle_top, middle_bottom, (255, 255, 0), 1) # cyan
 		
-		"""
-		
-		cv2.circle(img, p1, 1, (255, 0, 0), 2) # bleu
-		cv2.circle(img, p2, 1, (0, 255, 0), 2) # vert
-		cv2.circle(img, p3, 1, (0, 255, 255), 2) # jaune
-		cv2.circle(img, p4, 1, (255, 0, 255), 2) # magenta
-		
-		cv2.circle(img, middle_top, 1, (255, 255, 255), 2) # blanc
-		cv2.circle(img, middle_bottom, 1, (0, 0, 0), 2) # noir
-		
-		# Calculation of the image contour
+	else:
+		# Extern contour
 		imgGray = BGRtoGRAY(img)
 		imgEdges = DetectionContours(imgGray)
 		
@@ -510,9 +480,8 @@ def get_sign_height_circle(img, contour, tag):
 					break
 		
 		height_calculated = distance(middle_bottom_prime, middle_top_prime)
-		
-		cv2.line(img, middle_bottom_prime, middle_top_prime, (255, 0, 255), 1)
-		"""
+		cv2.line(img, middle_bottom_prime, middle_top_prime, (255, 255, 0), 1)
+
 	return height_calculated
 
 def get_sign_height_rectangle(img, contour, tag):
@@ -576,15 +545,7 @@ def get_sign_height_rectangle(img, contour, tag):
 			
 			cv2.line(img, middle_bottom, middle_top, (255, 0, 255), 1)
 		else:
-			# Case of the intern contour
-			
-			cv2.circle(img, top_left, 1, (255, 0, 0), 2) # bleu
-			cv2.circle(img, top_right, 1, (0, 255, 0), 2) # vert
-			cv2.circle(img, bottom_left, 1, (0, 255, 255), 2) # jaune
-			cv2.circle(img, bottom_right, 1, (255, 0, 255), 2) # magenta
-			
-			cv2.circle(img, middle_top, 1, (255, 255, 255), 2) # blanc
-			cv2.circle(img, middle_bottom, 1, (0, 0, 0), 2) # noir
+			# Intern contour
 			
 			# Calculation of the image contour
 			imgGray = BGRtoGRAY(img)
@@ -673,11 +634,6 @@ def get_sign_height_rectangle(img, contour, tag):
 			height_calculated = distance(top, bottom)
 		else:
 			# Case of the intern contour
-			
-# 			cv2.circle(img, top, 1, (255, 0, 0), 2) # bleu
-# 			cv2.circle(img, right, 1, (0, 255, 0), 2) # vert
-# 			cv2.circle(img, left, 1, (0, 255, 255), 2) # jaune
-# 			cv2.circle(img, bottom, 1, (255, 0, 255), 2) # magenta
 			
 			# Calculation of the image contour
 			imgGray = BGRtoGRAY(img)
@@ -993,7 +949,6 @@ if __name__ == '__main__':
 			imgGray = BGRtoGRAY(img) # On la transforme en niveaux de gris
 			imgEdges = DetectionContours(imgGray) # Finding the contours of the image
 			shape = get_shape(tag, dico) # Getting the shape of the sign, according to the dictionnary
-			print("SHAPE ", shape)
 			
 			approximated_polygon, number_of_sides = get_contour(img, imgEdges, shape)
 			center_in_cropped_sign = get_center_in_cropped_sign(img, shape, imgEdges, approximated_polygon, number_of_sides) # Process to get the center of the image
