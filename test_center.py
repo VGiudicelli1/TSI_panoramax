@@ -1,8 +1,8 @@
-import extraction
-import trouver_centre_panneau
+import python.extraction as extraction
+import python.trouver_centre_panneau as trouver_centre_panneau
 import cv2
 
-dico = trouver_centre_panneau.csv_reader('panodico.csv')
+dico = trouver_centre_panneau.csv_reader('data/panodico.csv')
 
 def test_get_whxy():
     assert extraction.get_whxy_from_img_path('data_test/test_A14.jpg') == (11000, 5500, 544, 2384)
