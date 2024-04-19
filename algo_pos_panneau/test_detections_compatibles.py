@@ -1,7 +1,17 @@
-from detections_compatible import are_detections_compatibles, compatible_matrix
+from detections_compatible import are_detections_compatibles, are_orientations_compatibles, compatible_matrix
 import pandas as pd
 from pytest import approx
 import numpy as np
+
+def make_binary_matrix(df, fonc):
+    n = len(df)
+    index = list(df.index)
+    return np.array(
+        [[
+            fonc(df.loc[df.index.isin([index[i], index[j]])]) 
+            for i in range(n)] 
+            for j in range(n) 
+        ], dtype=np.uint8)
 
 def make_dataset(noise = 0):
     data = pd.DataFrame([
@@ -84,14 +94,33 @@ def test_compatible_value():
     assert not are_detections_compatibles(detections.loc[detections.index.isin([0, 3])])
     assert     are_detections_compatibles(detections.loc[detections.index.isin([0, 4])])
 
-def test_detection_orientation():
-    # TODO
-    pass
+def test_compatible_orientation():
+    detections = pd.DataFrame([
+        ["001",  0, 40, "B14", "30",   90, -30.0, 11.180340],    # E
+        ["002",  0, 40, "B14", "30",  180, -30.0, 11.180340],    # S
+        ["000",  0, 40, "B14", "30",    0, -30.0, 11.180340],    # N
+        ["003",  0, 40, "B14", "30",  -90, -30.0, 11.180340],    # W
+        ["004",  0, 40, "B14", "30",  270, -30.0, 11.180340],    # W
+        ["005",  0, 40, "B14", "30",  360, -30.0, 11.180340],    # N
+        ["005",  0, 40, "B14", "30", -180, -30.0, 11.180340],    # S
+        ["004",  0, 40, "B14", "30", -270, -30.0, 11.180340],    # E
+    ], columns=("source_id", "source_E", "source_N", "code", "value", "orientation", "gisement", "sdf"))
+    
+    bmat = make_binary_matrix(detections, are_orientations_compatibles)
+    np.testing.assert_array_equal(
+        bmat,
+        [[1, 0, 0, 0, 0, 0, 0, 1],
+         [0, 1, 0, 0, 0, 0, 1, 0],
+         [0, 0, 1, 0, 0, 1, 0, 0],
+         [0, 0, 0, 1, 1, 0, 0, 0],
+         [0, 0, 0, 1, 1, 0, 0, 0],
+         [0, 0, 1, 0, 0, 1, 0, 0],
+         [0, 1, 0, 0, 0, 0, 1, 0],
+         [1, 0, 0, 0, 0, 0, 0, 1]])
 
 def test_compatible_position():
     # TODO
     pass 
-
 
 def test_compatible_matrix():
     detections = make_dataset(0)
