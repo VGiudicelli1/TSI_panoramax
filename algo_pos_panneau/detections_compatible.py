@@ -64,11 +64,12 @@ def are_values_compatibles(detections, seuils=default_seuils):
     return len(values) <= 1
 
 def are_orientations_compatibles(detections, seuils=default_seuils):
+    orientations = detections.orientation * math.pi / 180   # degrees to radian
     mean_angle = math.atan2(
-        np.mean(np.sin(detections.orientation)), 
-        np.mean(np.cos(detections.orientation))
+        np.mean(np.sin(orientations)), 
+        np.mean(np.cos(orientations))
     )
-    cos = np.cos(detections.orientation - mean_angle)
+    cos = np.cos(orientations - mean_angle)
     criteria = np.min(cos)
     return criteria > default_seuils["seuil_same_orientation_cos"] # seuil 0.9 => tolerence 25° from mean angle by default
 
@@ -92,8 +93,8 @@ def are_positions_compatibles(detections, seuils=default_seuils):
 
     A[0::2, 0] = 1
     A[1::2, 1] = 1
-    A[0::2, 2] = -detections.sdf * np.sin(detections.gisement)
-    A[1::2, 2] = -detections.sdf * np.cos(detections.gisement)
+    A[0::2, 2] = -detections.sdf * np.sin(detections.gisement * math.pi / 180)
+    A[1::2, 2] = -detections.sdf * np.cos(detections.gisement * math.pi / 180)
 
     X = np.linalg.lstsq(A, B, rcond=None)[0]
 
@@ -126,17 +127,13 @@ def compatible_matrix(detections, seuils=default_seuils):
 
     compat_mat = np.eye(n, dtype=np.uint8)
 
-    print(compat_mat)
-
     for i in range(n-1):
         for j in range(i+1, n):
-            if (are_detections_compatibles(
-                detections.loc[detections.index.isin((index[i], index[j]))]),
+            if are_detections_compatibles(
+                detections.loc[detections.index.isin((index[i], index[j]))],
                 seuils):
                 compat_mat[i, j] = 1
                 compat_mat[j, i] = 1
-
-        print(compat_mat)
 
     return compat_mat, index, revert_index
 

@@ -1,4 +1,4 @@
-from detections_compatible import are_detections_compatibles
+from detections_compatible import are_detections_compatibles, compatible_matrix
 import pandas as pd
 from pytest import approx
 import numpy as np
@@ -92,6 +92,29 @@ def test_compatible_position():
     # TODO
     pass 
 
+
+def test_compatible_matrix():
+    detections = make_dataset(0)
+    
+    compat_mat, index, rindex = compatible_matrix(detections)
+    compat_mat_2 = np.array([
+        [1,1,1,1,1,1,1,0,0,0,0],
+        [1,1,1,1,0,0,0,1,0,0,0],
+        [1,1,1,1,0,0,0,0,1,0,0],
+        [1,1,1,1,0,0,0,1,0,0,0],
+        [1,0,0,0,1,1,1,0,0,0,0],
+        [1,0,0,0,1,1,1,0,0,0,0],
+        [1,0,0,0,1,1,1,0,0,1,0],
+        [0,1,0,1,0,0,0,1,1,1,1],
+        [0,0,1,0,0,0,0,1,1,1,1],
+        [0,0,0,0,0,0,1,1,1,1,1],
+        [0,0,0,0,0,0,0,1,1,1,1],
+    ])
+
+    np.testing.assert_array_equal(
+        compat_mat,
+        compat_mat_2
+        )
 
 if __name__ == "__main__":
     import pytest
