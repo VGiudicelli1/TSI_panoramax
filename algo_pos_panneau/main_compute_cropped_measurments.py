@@ -1,7 +1,8 @@
 from database_connect import connect_db, DatabaseError
 import pandas as pd
 from math import pi
-
+import numpy as np
+from utils import format_angle_degrees
 """
 compute gisement and sdf
 need:
@@ -40,7 +41,7 @@ def save(conn, data):
     try:
         with conn.cursor() as cur:
             cur.execute(f"""UPDATE cropped_sign AS c 
-                        SET gisement = new_values.gis --, sdf = new_values.sdf
+                        SET gisement = new_values.gis, sdf = new_values.sdf
                         FROM ( VALUES {values_sql}) AS new_values (id, sdf, gis)
                         WHERE c.id = new_values.id;""")
 
@@ -52,7 +53,9 @@ def save(conn, data):
 
 
 def compute(detections):
-    detections["gisement"] = (detections.x / detections.source_width - 0.5) * detections.source_fov + detections.source_azimut
+    gisements = (detections.x / detections.source_width - 0.5) * detections.source_fov + detections.source_azimut
+    detections["gisement"] = format_angle_degrees(gisements)
+
     detections["sdf"] = detections.source_height / (detections.dz * 2 * pi)
 
 if __name__ == "__main__":
