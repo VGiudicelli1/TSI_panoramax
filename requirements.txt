@@ -31,6 +31,7 @@ numpy==1.26.4
     #   matplotlib
     #   opencv-python
     #   pandas
+    #   scipy
 opencv-python==4.9.0.80
     # via -r requirements.in
 packaging==24.0
@@ -62,6 +63,8 @@ python-dateutil==2.9.0.post0
 pytz==2024.1
     # via pandas
 requests==2.31.0
+    # via -r requirements.in
+scipy==1.13.0
     # via -r requirements.in
 six==1.16.0
     # via python-dateutil
