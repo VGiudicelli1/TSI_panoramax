@@ -1,4 +1,4 @@
-from detections_compatible import are_detections_compatibles, are_orientations_compatibles, compatible_matrix
+from detections_compatible import are_detections_compatibles, are_orientations_compatibles, are_positions_compatibles, compatible_matrix
 import pandas as pd
 from pytest import approx
 import numpy as np
@@ -119,8 +119,29 @@ def test_compatible_orientation():
          [1, 0, 0, 0, 0, 0, 0, 1]])
 
 def test_compatible_position():
-    # TODO
-    pass 
+    detections = pd.DataFrame([
+        ["001", 10, 10, "B14", None, 0,   0, 30],    # pt1, N, 30m pour 1m  (s:1m)
+        ["002", 40, 40, "B14", None, 0, -90, 30],    # pt2, W, 30m pour 1m  (s:1m)
+        ["001", 10, 10, "B14", None, 0,  90, 10],    # pt1, E, 10m pour 1m  (s:3m)
+        ["002", 40, 40, "B14", None, 0, 180, 10],    # pt2, S, 10m pour 1m  (s:3m)
+        ["001", 10, 10, "B14", None, 0,   0, 10],    # pt1, N, 10m pour 1m  (s:3m)
+        ["002", 40, 40, "B14", None, 0, -90, 10],    # pt2, W, 10m pour 1m  (s:3m)
+        ["001", 10, 10, "B14", None, 0,  90, 20],    # pt1, E, 20m pour 1m  (s:1.6m)
+        ["002", 40, 40, "B14", None, 0, 180, 20],    # pt2, S, 20m pour 1m  (s:1.6m)
+    ], columns=("source_id", "source_E", "source_N", "code", "value", "orientation", "gisement", "sdf"))
+    
+    # note: compatible quand meme pt et size = 0: ce cas est différencié par le critére de différence de source
+    bmat = make_binary_matrix(detections, are_positions_compatibles)
+    np.testing.assert_array_equal(
+        bmat,
+        [[1, 1, 1, 0, 1, 0, 1, 0],
+         [1, 1, 0, 1, 0, 1, 0, 1],
+         [1, 0, 1, 1, 1, 0, 1, 0],
+         [0, 1, 1, 1, 0, 1, 0, 1],
+         [1, 0, 1, 0, 1, 1, 1, 0],
+         [0, 1, 0, 1, 1, 1, 0, 1],
+         [1, 0, 1, 0, 1, 0, 1, 1],
+         [0, 1, 0, 1, 0, 1, 1, 1]])
 
 def test_compatible_matrix():
     detections = make_dataset(0)
