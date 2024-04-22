@@ -1,14 +1,11 @@
 from database_connect import connect_db, DatabaseError
-from utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo
+from utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo, mean_angles_deg
 import pandas as pd
 import numpy as np
+import math
+from code_panneaux import is_code_face
 
 def load(conn):
-    signs = pd.DataFrame([], columns=("id", "lng", "lat", "size", "orientation", "precision", "code", "value"))
-    cropped_signs = pd.DataFrame([], columns=("id", "lng", "lat", "sign_id", "sdf", "gisement", "orientation", "code", "value"))
-    proj_geo_to_lambert_delta(signs)
-    proj_geo_to_lambert_delta(cropped_signs)
-
     try:
         with conn.cursor() as cur:
             cur.execute(f"""
@@ -37,8 +34,37 @@ def load(conn):
         raise error
 
 
+def recompute_sign(id, signs, cropped_signs):
+    cs = cropped_signs.loc[cropped_signs.sign_id == id]
+
+    # code, valeur: minimum 3 from face
+    codes = [ (code, value) for (value, code) in signs.loc[:, ("value", "code")].values if is_code_face(code)]
+    if len(codes) < 3:
+        return
+
+    # e, n, size: par moindre carrés
+    n = len(cs)
+    A = np.zeros((2*n, 3))
+    B = np.zeros((2*n, 1))
+
+    B[0::2, 0] = cs.e
+    B[1::2, 0] = cs.n
+
+    A[0::2, 0] = 1
+    A[1::2, 1] = 1
+    A[0::2, 2] = -cs.sdf * np.sin(cs.gisement * math.pi / 180)
+    A[1::2, 2] = -cs.sdf * np.cos(cs.gisement * math.pi / 180)
+
+    X = np.linalg.lstsq(A, B, rcond=None)[0]
+
+    signs.loc[signs.id==id, ("e", "n", "size")] = X.reshape(3)
+    signs.loc[signs.id==id, "orientation"] = mean_angles_deg(cs.orientation)
+    signs.loc[signs.id==id, ("code", "value")] = codes[0]
+
+
 def recompute_all_signs(signs, cropped_signs):
-    pass
+    for id in signs.loc[:, "id"].values:
+        recompute_sign(id, signs, cropped_signs)
 
 
 def save(conn, signs):
@@ -73,7 +99,7 @@ if __name__ == "__main__":
 
     print("Computing...\t\t\t\t\t", end="")
     recompute_all_signs(signs, cropped_signs)
-    print(f"UNDONE (TODO)")
+    print(f"Done")
 
     print("Saving...\t\t\t\t\t", end="")
     save(conn, signs)
