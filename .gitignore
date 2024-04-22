@@ -3,3 +3,9 @@
 
 # mettez vos environnements ici
 envir_python
+
+# tex files
+**/*.aux
+**/*.log
+**/*.out
+**/*.toc
