@@ -51,6 +51,40 @@ def load(conn):
         raise error
 
 
+def save_new_panneaux(conn, panneaux):
+    index = panneaux.id.isnull()
+    try:
+        with conn.cursor() as cur:
+            proj_lambert_delta_to_geo(panneaux)
+            values = ", ".join([
+                f"(ST_POINT({e[0]},{e[1]}), {e[2]}, '{e[3]}', '{e[4]}', {e[5]}, -1)"
+                for e in panneaux.loc[index, ("lng", "lat", "size", "code", "value", "orientation")].values
+            ])
+            cur.execute(f"""
+                INSERT INTO sign (geom, size, code, value, orientation, precision)
+                VALUES {values}
+                RETURNING id
+            """)
+            panneaux.loc[index, "id"] = cur.fetchall()
+            conn.commit()
+    except (Exception, DatabaseError) as error:
+        raise error
+
+def save_detections(conn, detections):
+    values = ", ".join([
+        f"({id}, {p_id})"
+        for (id, p_id) in detections.loc[:, ("id", "panneau_id")].values
+    ])
+    try:
+        with conn.cursor() as cur:
+            cur.execute(f"""UPDATE cropped_sign AS c 
+                        SET sign_id = new_values.p_id
+                        FROM ( VALUES {values}) AS new_values (id, p_id)
+                        WHERE c.id = new_values.id;""")
+            conn.commit()
+    except (Exception, DatabaseError) as error:
+        raise error
+
 # clusterise
 def clusterise(detections):
     compat_mat, _, rindex = compatible_matrix(detections)
@@ -192,9 +226,12 @@ if __name__ == "__main__":
     print(f"Done : {len(links)} liens")
 
     print("Enregistrement des nouveaux panneaux...\t\t", end="")
+    save_new_panneaux(conn, panneaux_detectes)
     print("UNDONE (TODO)")
 
     print("Mise à jour des detections...\t\t\t", end="")
+    update_detection_fk_id(detections, panneaux_detectes)
+    save_detections(conn, detections)
     print("UNDONE (TODO)")
 
     print("fin")
