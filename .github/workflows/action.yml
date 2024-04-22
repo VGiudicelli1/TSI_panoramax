@@ -3,14 +3,6 @@ on:
   - push
   - pull_request
 jobs:
-  job_test:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        
-      - name: Test echo
-        run: echo "Coucou la team Panoramax !"
   job_python:
     runs-on: ubuntu-22.04
     steps:
