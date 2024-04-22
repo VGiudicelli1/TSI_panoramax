@@ -107,7 +107,7 @@ def test_update_fk_panneaux():
 
 def test_insert_new_panneaux():
     # this test will insert data into database. Run it manualy on a database for tests
-    #return
+    return
     conn, config = connect_db()
     load(conn)  # loading is necessary to init proj (delta)
     
