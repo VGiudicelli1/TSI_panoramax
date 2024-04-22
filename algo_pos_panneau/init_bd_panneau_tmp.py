@@ -19,7 +19,7 @@ def init_tests(conn, config):
     imagette.loc[imagette.code!="B14", ("value")] = None
     try:
         with conn.cursor() as cur:
-            cur.execute("TRUNCATE TABLE collection, cropped_sign, picture, sign")
+            cur.execute("TRUNCATE TABLE collection, cropped_sign, picture, sign RESTART IDENTITY")
             cur.execute(f"INSERT INTO collection (id, date) VALUES ('{seq_id}', '01/01/2024')")
 
             cur.execute(df_to_insert(
