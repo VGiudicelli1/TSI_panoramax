@@ -36,13 +36,13 @@ def load(conn):
 def save(conn, data):
     if len(data) == 0:
         return
-    values = data.loc[:, ("id", "sdf", "gisement")].values
-    values_sql = ", ".join([f"({id}, {sdf}, {gis})" for id, sdf, gis in values])
+    values = data.loc[:, ("id", "sdf", "gisement", "orientation")].values
+    values_sql = ", ".join([f"({id}, {sdf}, {gis}, {orient})" for (id, sdf, gis, orient) in values])
     try:
         with conn.cursor() as cur:
             cur.execute(f"""UPDATE cropped_sign AS c 
-                        SET gisement = new_values.gis, sdf = new_values.sdf
-                        FROM ( VALUES {values_sql}) AS new_values (id, sdf, gis)
+                        SET gisement = new_values.gis, sdf = new_values.sdf, orientation = new_values.orient
+                        FROM ( VALUES {values_sql}) AS new_values (id, sdf, gis, orient)
                         WHERE c.id = new_values.id;""")
 
             conn.commit()
@@ -57,6 +57,8 @@ def compute(detections):
     detections["gisement"] = format_angle_deg(gisements)
 
     detections["sdf"] = detections.source_height / (detections.dz * 2 * pi)
+
+    detections["orientation"] = 0 # TODO: complete this compute
 
 if __name__ == "__main__":
     print("Connecting to database...\t\t\t", end="")

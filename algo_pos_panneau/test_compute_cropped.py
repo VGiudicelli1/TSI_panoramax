@@ -24,6 +24,7 @@ def test_compute_create_columns_if_empty():
     assert "id" in data.columns
     assert "sdf" in data.columns
     assert "gisement" in data.columns
+    assert "orientation" in data.columns
 
 def test_compute_result_gisement():
     data = pd.DataFrame([
@@ -51,6 +52,10 @@ def test_compute_result_sdf():
     assert data.loc[0, "sdf"] == approx(16, abs=0.1)
     assert data.loc[1, "sdf"] == approx(8, abs=0.1)
     assert data.loc[2, "sdf"] == approx(5.3, abs=0.1)
+
+def test_compute_result_orientation():
+    # TODO
+    pass
 
 
 if __name__ == "__main__":
