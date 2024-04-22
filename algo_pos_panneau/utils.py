@@ -24,7 +24,10 @@ def proj_geo_to_lambert_delta(df, lat_column="lat", lng_column="lng", e_column="
     E, N = _transformer_geo_to_lambert.transform(df.loc[:, (lat_column, )], df.loc[:, (lng_column, )])
     if delta==None:
         if _DELTA==None:
-            delta = (_mean(E), _mean(N))
+            if len(df) == 0:
+                delta = (0,0)
+            else:
+                delta = (_mean(E), _mean(N))
             _DELTA = delta
         else:
             delta = _DELTA
