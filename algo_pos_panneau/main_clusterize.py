@@ -105,16 +105,24 @@ def compute_panneau_unique(detections):
 
     return panneau
 
+def makeLetterId(nb):
+    return (makeLetterId(nb//26) if nb//26 else "") + chr(ord('a')+(nb%26))
+
 def compute_panneaux(detections, clusters):
     panneaux = pd.DataFrame(
         [], 
-        columns=("id", "e", "n", "size", "orientation", "code", "value")
+        columns=("id", "e", "n", "size", "orientation", "code", "value", "temp_id")
     )
+    detections.loc[:, "panneau_id_temp"] = None
 
     for cluster in clusters:
         panneau = compute_panneau_unique(detections.loc[detections.index.isin(cluster)])
-        if panneau:
-            panneaux.loc[len(panneaux)] = panneau.loc[0]
+        if panneau is not None:
+            i = len(panneaux)
+            panneau_id = makeLetterId(i)
+            panneau.loc[0, "temp_id"] = panneau_id
+            panneaux.loc[i] = panneau.loc[0]
+            detections.loc[detections.index.isin(cluster), "panneau_id_temp"] = panneau_id
 
     return panneaux
 
@@ -130,7 +138,7 @@ def appareille_panneaux(panneaux_detectes, panneaux_connus):
         p1 = panneaux_detectes.loc[i]
         p2 = panneaux_connus.loc[j]
         dist_plani = ((p1.e - p2.e)**2 + (p1.n - p2.n)**2 ) **.5
-        dist_size = abs(p1.size - p2.size)
+        dist_size = abs(p1["size"] - p2["size"])
         dist_orient = abs(format_angle_deg(p1.orientation - p2.orientation))
         if p1.code != p2.code or p1.value != p2.value or dist_plani > 10 or dist_size > 0.5 or dist_orient > 90:
             return np.inf
@@ -139,7 +147,12 @@ def appareille_panneaux(panneaux_detectes, panneaux_connus):
     index1 = list(panneaux_detectes.index)
     index2 = list(panneaux_connus.index)
     links = appareille_list(index1, index2, dist)
-    return [(index1[i], index2[j]) for (i, j) in links]
+
+    # update ids
+    for (idx_p_d, idx_p_c) in links:
+        panneaux_detectes.loc[idx_p_d, "id"] = panneaux_connus.loc[idx_p_c, "id"]
+    
+    return links
 
 def appareille_list(l1, l2, dist):
     if len(l1) == 0 or len(l2) == 0:
@@ -152,7 +165,10 @@ def appareille_list(l1, l2, dist):
 
     return [(i, min1[i]) for i in range(len(min1)) if i == min2[min1[i]] and dists[min1[i], i] != np.inf]
 
-# 
+
+def update_detection_fk_id(detections, panneaux):
+    d2 = detections.join(panneaux.set_index("temp_id").add_prefix("p_"), on="panneau_id_temp")
+    detections.loc[:, "panneau_id"] = d2.loc[:, "p_id"].replace({np.nan: None})
 
 if __name__ == "__main__":
     print("Connecting to database...\t\t\t", end="")
