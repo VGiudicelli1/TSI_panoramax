@@ -52,6 +52,8 @@ def load(conn):
 
 
 def save_new_panneaux(conn, panneaux):
+    if len(panneaux) == 0:
+        return
     index = panneaux.id.isnull()
     try:
         with conn.cursor() as cur:
@@ -71,14 +73,16 @@ def save_new_panneaux(conn, panneaux):
         raise error
 
 def save_detections(conn, detections):
+    if len(detections) == 0:
+        return
     values = ", ".join([
         f"({id}, {p_id})"
         for (id, p_id) in detections.loc[:, ("id", "panneau_id")].values
-    ])
+    ]).replace("None", "NULL")
     try:
         with conn.cursor() as cur:
             cur.execute(f"""UPDATE cropped_sign AS c 
-                        SET sign_id = new_values.p_id
+                        SET sign_id = CAST(new_values.p_id AS INTEGER)
                         FROM ( VALUES {values}) AS new_values (id, p_id)
                         WHERE c.id = new_values.id;""")
             conn.commit()
@@ -227,11 +231,11 @@ if __name__ == "__main__":
 
     print("Enregistrement des nouveaux panneaux...\t\t", end="")
     save_new_panneaux(conn, panneaux_detectes)
-    print("UNDONE (TODO)")
+    print(f"Done")
 
     print("Mise à jour des detections...\t\t\t", end="")
     update_detection_fk_id(detections, panneaux_detectes)
     save_detections(conn, detections)
-    print("UNDONE (TODO)")
+    print(f"Done")
 
     print("fin")
