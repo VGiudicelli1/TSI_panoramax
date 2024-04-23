@@ -1,0 +1,12 @@
+id,lat,long,focale,azimut,fov,href
+stra_1_1,48.581761,7.753173,,234,360,https://api.panoramax.xyz/api/collections/55166389-2fb6-4a6c-b423-786421888d79/items/2d593403-7f7f-4a1e-a218-071e891844d2
+stra_1_2,48.581769,7.753198,,243,360,https://api.panoramax.xyz/api/collections/55166389-2fb6-4a6c-b423-786421888d79/items/6709207b-a4a5-45a2-9072-e158cdc88f40
+stra_1_3,48.581748,7.753306,,314,360,https://api.panoramax.xyz/api/collections/55166389-2fb6-4a6c-b423-786421888d79/items/0935403e-1196-4e4c-b18c-c90aa48e7792
+stra_2_1,48.590529,7.765407,,35,360,https://api.panoramax.xyz/api/collections/73083f85-ffc7-4ccb-abb8-999a0ddfd1bb/items/9c3f2ba1-c139-44fa-89b0-948eaca13e97
+stra_2_2,48.590578,7.765466,,37,360,https://api.panoramax.xyz/api/collections/73083f85-ffc7-4ccb-abb8-999a0ddfd1bb/items/c38ba514-0994-4ebe-900c-e79f173d9093
+stra_2_3,48.590658,7.765568,,38,360,https://api.panoramax.xyz/api/collections/73083f85-ffc7-4ccb-abb8-999a0ddfd1bb/items/02d5e3a3-3c29-46e6-89a4-202f9346c834
+stra_2_4,48.590723,7.765655,,40,360,https://api.panoramax.xyz/api/collections/73083f85-ffc7-4ccb-abb8-999a0ddfd1bb/items/9f35835b-ff21-43e6-90cb-ddaadb5296d7
+stra_3_1,48.591181,7.750078,,341,360,https://api.panoramax.xyz/api/collections/9b1f50db-fda9-4e88-bd70-8e59bc0a308a/items/160393c1-69f5-44d2-ba67-e0c584367bf5
+stra_3_2,48.59125,7.750047,,341,360,https://api.panoramax.xyz/api/collections/9b1f50db-fda9-4e88-bd70-8e59bc0a308a/items/8d2057c4-d8b4-4fdb-a284-4de550b1421a
+stra_3_3,48.591315,7.75002,,342,360,https://api.panoramax.xyz/api/collections/9b1f50db-fda9-4e88-bd70-8e59bc0a308a/items/9d925596-15d8-4256-b489-7c1922dc9a4e
+stra_3_4,48.59137,7.750001,,356,360,https://api.panoramax.xyz/api/collections/9b1f50db-fda9-4e88-bd70-8e59bc0a308a/items/bd063a86-a23e-48fc-9e41-e37c1ad2a1e2

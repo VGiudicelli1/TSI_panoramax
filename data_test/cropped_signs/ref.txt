@@ -1,0 +1,6 @@
+point_1;1.456388889;43.612415416;https://api.panoramax.xyz/api/collections/a957f734-e816-4c1d-af36-7f35deea2b78/items/4e13d11f-bee3-4700-aaf4-1425942d2e69
+point_2.png;1.456371798;43.612578416;https://api.panoramax.xyz/api/collections/a957f734-e816-4c1d-af36-7f35deea2b78/items/8c06bea9-7f34-4372-a0d0-7bb8202a2e45
+point_2bis.png;1.456371798;43.612578416;https://api.panoramax.xyz/api/collections/a957f734-e816-4c1d-af36-7f35deea2b78/items/b95fc968-c2bf-4976-b450-a3d239a84838
+point_1bis.png;1.456384571;43.612242606;https://api.panoramax.xyz/api/collections/a957f734-e816-4c1d-af36-7f35deea2b78/items/3d16947c-4e96-44db-a972-5e474d5db4b7
+
+point avec bcp de panneaux : 1.4572611;43.6122122
