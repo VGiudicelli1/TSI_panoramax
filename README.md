@@ -17,7 +17,7 @@ Our objectives are the last part of this project. We try to localize road signs 
 - 5 ENSG students
 - TSI
 - final project
-- 5 full-time weeks
+- 4 full-time weeks
 
 ## Main Processes
 [Associating cropped signs with the original images](./python/search_pi/insert-into-database.py)
