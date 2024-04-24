@@ -53,9 +53,34 @@ Pour tester la détection d'objet:
 - https://github.com/panoramax-project/DetectionTutorial
 
 ## Dependencies
-
-- [pyexiv2](https://github.com/LeoHsiao1/pyexiv2) - Version 2.12.0
-- [pytest](https://github.com/pytest-dev/pytest) - Version 8.1.1
-- [pillow](https://github.com/python-pillow/Pillow) - Version 10.3.0
+- [attrs](https://github.com/python-attrs/attrs) - Version 23.2.0
+- [certifi](https://github.com/certifi/python-certifi) - Version 2024.2.2
+- [charset-normalizer](https://github.com/Ousret/charset_normalizer) - Version 3.3.2
+- [contourpy](https://github.com/contourpy/contourpy) - Version 1.2.1
+- [cycler](https://github.com/matplotlib/cycler) - Version 0.12.1
+- [fonttools](https://github.com/fonttools/fonttools) - Version 4.51.0
+- [idna](https://github.com/kjd/idna) - Version 3.7
+- [iniconfig](https://github.com/pytest-dev/iniconfig) - Version 2.0.0
+- [kiwisolver](https://github.com/nucleic/kiwi) - Version 1.4.5
+- [matplotlib](https://github.com/matplotlib/matplotlib) - Version 3.8.3
 - [numpy](https://github.com/numpy/numpy) - Version 1.26.4
+- [opencv-python](https://github.com/opencv/opencv-python) - Version 4.9.0.80
+- [packaging](https://github.com/pypa/packaging) - Version 24.0
 - [pandas](https://github.com/pandas-dev/pandas) - Version 2.2.1
+- [pillow](https://github.com/python-pillow/Pillow) - Version 10.3.0
+- [pluggy](https://github.com/pytest-dev/pluggy) - Version 0.13.1
+- [psycopg2](https://github.com/psycopg/psycopg2) - Version 2.9.9
+- [py](https://github.com/pytest-dev/py) - Version 1.11.0
+- [pyexiv2](https://github.com/LeoHsiao1/pyexiv2) - Version 2.12.0
+- [pyparsing](https://github.com/pyparsing/pyparsing/) - Version 3.1.2
+- [pyproj](https://github.com/pyproj4/pyproj) - Version 3.6.1
+- [pytest](https://github.com/pytest-dev/pytest) - Version 6.2.4
+- [python-dateutil](https://github.com/dateutil/dateutil) - Version 2.9.0.post0
+- [pytz](https://github.com/stub42/pytz) - Version 2024.1
+- [requests](https://github.com/psf/requests) - Version 2.31.0
+- [scipy](https://github.com/scipy/scipy) - Version 1.13.0
+- [six](https://github.com/benjaminp/six) - Version 1.16.0
+- [toml](https://github.com/uiri/toml) - Version 0.10.2
+- [tzdata](https://github.com/python/tzdata) - Version 2024.1
+- [urllib3](https://github.com/urllib3/urllib3) - Version 2.2.1
+
