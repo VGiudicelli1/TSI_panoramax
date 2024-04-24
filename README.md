@@ -21,7 +21,9 @@ Our objectives are the last part of this project. We try to localize road signs 
 
 ## Main Processes
 [Associating cropped signs with the original images](./python/search_pi/insert-into-database.py)
+
 [Computing center & height of signs](./python/trouver_centre_panneau.py)
+
 Computing sign positions & removing duplicates : 
  - [Computes additional data](./algo_pos_panneau/main_compute_cropped_measurements.py)
  - [Clusterize](./algo_pos_panneau/main_clusterize.py)
