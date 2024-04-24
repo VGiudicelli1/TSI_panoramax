@@ -320,7 +320,13 @@ def croppedSignInDatabase(connection, row, table = "cropped_sign"):
 	"""
 	# Extract the filename, code and value from the row
 	filename = row["filename"]
-	code, value = extractCodeAndValue(row)
+	
+	code = row["directory"]
+	if "B14" in code:
+		value = code[4::]
+		code = code[0:3]
+	else:
+		value = "null"
 	
 	# Create and execute the query
 	query = """SELECT * FROM {}
