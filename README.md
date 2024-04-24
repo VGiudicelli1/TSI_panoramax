@@ -21,35 +21,38 @@ Our objectives are the last part of this project. We try to localize road signs 
 
 ## Useful links
 
-Export de test de panneaux détecté dans les photos de Panoramax:
+Sample export of detected signs in Panoramax pictures:
 https://www.data.gouv.fr/fr/datasets/export-de-test-de-panneaux-detecte-dans-les-photos-de-panoramax/
 
+Data model for road signs
 Modèle de données pour les panneaux de signalisation routière:
 https://github.com/IGNF/Pano
 
+List of french road signs:
 Modèles de panneaux de signalisation routière en France:
 https://fr.wikipedia.org/wiki/Panneau_de_signalisation_routière_en_France
 
-API pour récupérer une photo avec son ID:
+API to get a specific Panoramax picture from its ID
 https://api.panoramax.xyz/api/pictures/<id>/hd.jpg 
 
-Pour se renseigner - beta.gouv: 
+More infos - beta.gouv:
 https://beta.gouv.fr/
 
-Sur la fabrique des géocommuns: 
+### About:
+Fabrique des géocommuns
 https://www.ign.fr/institut/la-fabrique-des-geocommuns-incubateur-de-communs-lign
 
 OSM:
 - https://www.openstreetmap.fr/
 
-Pour mieux connaitre Panoramax:
+Panoramax:
 - https://panoramax.fr/
 - https://forum.geocommuns.fr/
 
-Pour découvrir le code:
+Check out the web interface code:
 - https://gitlab.com/geovisio
 
-Pour tester la détection d'objet:
+Objet Detection:
 - https://github.com/panoramax-project/DetectionTutorial
 
 ## Dependencies
