@@ -64,3 +64,10 @@ def show_image_rectangle(img, corners, center, title="Image"):
     plt.axis('off')
     plt.legend()
     plt.show()
+
+def save_image(img, dest, title = "Center and height"):
+	
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    plt.title(title)
+    plt.axis('off')
+    plt.savefig(dest)

@@ -15,6 +15,7 @@ import python.plotting as plotting
 import python.extraction as extraction
 import pandas as pd
 import os
+import random as rd
 from scipy.spatial import ConvexHull
 
 def csv_reader(path):
@@ -39,8 +40,9 @@ def BGRtoGRAY(img):
 	return gray
 
 def DetectionContours(imgGray):
-	imgBlur = cv2.GaussianBlur(imgGray, (5, 5), 0)
-	edges = cv2.Canny(imgBlur, 50, 150)
+	imgBlur = cv2.GaussianBlur(imgGray, (3, 3), 0)
+	# plotting.show_image(imgGray, "bluuuuur")
+	edges = cv2.Canny(imgBlur, 50, 200)
 	return edges
 
 def get_shape(tag, dico):
@@ -99,13 +101,19 @@ def get_contour(img, edges, shape):
 
 	# Sorting them to get the biggest one
 	contours = sorted(contours, key=cv2.contourArea, reverse=True)
-	largest_contour = contours[0]
+	imgcopy = img.copy()
 	
+	largest_contour = contours[0]
+	#plotting.show_image(imgcopy)
 	# Approximation of a polygon
 	epsilon = value_for_epsilon * cv2.arcLength(largest_contour, True) # Definition of the factor 
 	approx = cv2.approxPolyDP(largest_contour, epsilon, True) # Approximation
 	sides = len(approx) # Number of sides of the polygon, to know if we found the good form
 	# x_min, x_max, y_min, y_max = which_circle(img, largest_contour)
+	imgcopy = img.copy()
+	cv2.drawContours(imgcopy, [largest_contour], -1, (0, 255, 0), 2)
+	cv2.drawContours(imgcopy, [approx], -1, (255, 0, 0), 2)
+	plotting.show_image(imgcopy, "contour")
 	return approx, sides
 
 def get_center_in_cropped_sign(img, shape, imgEdges, contour_sign, number_of_sides):
@@ -336,7 +344,7 @@ def make_liste_contour(contour):
 		list_pixels.append(coord)
 	return list_pixels
 
-def get_sign_height(img, contour, shape, tag):
+def get_sign_height(img, contour, shape, sides, tag):
 	"""
 
 	Parameters
@@ -355,12 +363,12 @@ def get_sign_height(img, contour, shape, tag):
 
 	"""
 	if shape == 2 or shape == 4:
-		if number_of_sides < 15:
+		if sides < 15:
 			height = get_sign_height_circle(img, contour, tag)
 		else:
 			height = None
 	elif shape == 0 or shape == 1 or shape == 9:
-		if number_of_sides == 3:
+		if sides == 3:
 			if shape == 0:
 				height = get_sign_height_triangle(img, contour, True)
 			else:
@@ -368,7 +376,7 @@ def get_sign_height(img, contour, shape, tag):
 		else:
 			height = None
 	else:
-		if number_of_sides == 4:
+		if sides == 4:
 			height = get_sign_height_rectangle(img, contour, tag)
 		else:
 			height = None
@@ -793,7 +801,7 @@ def area_of_point_cloud(points):
 						np.dot(convex_hull_points[:, 1], np.roll(convex_hull_points[:, 0], 1)))
 	return area
 
-if __name__ == '__main__':
+if __name__ == '__main_':
 	# On importe et on lit le CSV
 	dictionnaire_source = "../data/panodico.csv"
 	dico = csv_reader(dictionnaire_source)
@@ -834,7 +842,7 @@ if __name__ == '__main__':
 			w,h,x,y = extraction.get_whxy_from_img_path(picture_path) # Getting the cropped sign informations
 			final_center = find_center_in_original_picture(img, center_in_cropped_sign, x, y) # Getting the center of the sign in the original image from panoramax
 			#print("FINAL CENTER ", final_center)
-			
+			print(number_of_sides)
 			cv2.circle(img, center_in_cropped_sign, 1, (0, 255, 0), 2)
-			height_sign = get_sign_height(img, approximated_polygon, shape, tag) # Getting the height of the sign
+			height_sign = get_sign_height(img, approximated_polygon, shape, number_of_sides, tag) # Getting the height of the sign
 			plotting.show_image(img, title='Center and height')

@@ -3,8 +3,6 @@ import shutil
 from PIL import Image
 from io import BytesIO
 
-log = print
-
 
 def getClosestPictureInformation(lon, lat):
 	"""
@@ -39,8 +37,6 @@ def getClosestPictureInformation(lon, lat):
 								lon + 0.00001,
 								lat + 0.00001)
 	dataToSend["bbox"] = bbox
-
-	log(url+"?limit=1&bbox={}".format(bbox))
 
 	# Send and get the answer of the file
 	responseTotal = requests.post(url, json=dataToSend)
@@ -89,6 +85,7 @@ def is360Picture(properties):
 	finally:
 		return test
 
+
 def getShapePicture(pictureId):
 	"""
 	Get the shape of a picture (width, height).
@@ -117,6 +114,7 @@ def getShapePicture(pictureId):
 	
 	return (width, height)
 
+
 def savePicture(pictureId, dest):
 	"""
 	Save the picture in HD in the destination folder.
@@ -144,8 +142,6 @@ def savePicture(pictureId, dest):
 	if pictureResponse.status_code == 200:
 		with open(dest+"/{}.jpeg".format(pictureId), 'wb') as f:
 			shutil.copyfileobj(pictureResponse.raw, f)
-			log("Picture {} saved in the following folder : \n{}\n"
-				.format(pictureId + ".jpeg", dest))
 
 
 def savePictures(collectionId, pictureId, dest):
