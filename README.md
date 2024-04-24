@@ -21,38 +21,36 @@ Our objectives are the last part of this project. We try to localize road signs 
 
 ## Useful links
 
-Sample export of detected signs in Panoramax pictures:
-https://www.data.gouv.fr/fr/datasets/export-de-test-de-panneaux-detecte-dans-les-photos-de-panoramax/
+##### Sample export of detected signs in Panoramax pictures:
+ - https://www.data.gouv.fr/fr/datasets/export-de-test-de-panneaux-detecte-dans-les-photos-de-panoramax/
 
-Data model for road signs
-Modèle de données pour les panneaux de signalisation routière:
-https://github.com/IGNF/Pano
+###### Data model for road signs :
+ - https://github.com/IGNF/Pano
 
-List of french road signs:
-Modèles de panneaux de signalisation routière en France:
-https://fr.wikipedia.org/wiki/Panneau_de_signalisation_routière_en_France
+###### List of french road signs:
+ - https://fr.wikipedia.org/wiki/Panneau_de_signalisation_routière_en_France
 
-API to get a specific Panoramax picture from its ID
-https://api.panoramax.xyz/api/pictures/<id>/hd.jpg 
+###### API to get a specific Panoramax picture from its ID
+ - https://api.panoramax.xyz/api/pictures/<id>/hd.jpg 
 
-More infos - beta.gouv:
-https://beta.gouv.fr/
+###### More infos - beta.gouv:
+ - https://beta.gouv.fr/
 
 ### About:
-Fabrique des géocommuns
-https://www.ign.fr/institut/la-fabrique-des-geocommuns-incubateur-de-communs-lign
+###### Fabrique des géocommuns
+ - https://www.ign.fr/institut/la-fabrique-des-geocommuns-incubateur-de-communs-lign
 
-OSM:
+###### OSM:
 - https://www.openstreetmap.fr/
 
-Panoramax:
+###### Panoramax:
 - https://panoramax.fr/
 - https://forum.geocommuns.fr/
 
-Check out the web interface code:
+###### Check out the web interface code:
 - https://gitlab.com/geovisio
 
-Objet Detection:
+###### Objet Detection:
 - https://github.com/panoramax-project/DetectionTutorial
 
 ## Dependencies
