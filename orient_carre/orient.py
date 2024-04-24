@@ -1,7 +1,8 @@
 from PIL import Image, ImageMath
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage import data, transform
+from skimage import transform
+import cv2
 
 detection = Image.open("./C28_detecte.jpg")
 
@@ -47,6 +48,13 @@ def has_been_closed(ax):
     fig = ax.figure.canvas.manager
     active_fig_managers = plt._pylab_helpers.Gcf.figs.values()
     return fig not in active_fig_managers
+
+def get_list_imgs(path, ext="jpg"):
+    return [
+        path+"/"+name
+        for name in os.listdir(path)
+        if name.split(".")[-1] == ext
+    ]
 
 def show_bands(directory):
     imgs_names = os.listdir(f"../DATA_BASE_SIMULEE/{directory}")
@@ -113,12 +121,54 @@ def rotateOrient(img, orient):
 
 lDir = ["A13a", "AB4", "AB6", "B14-50", "C28", "CE22", "../orient_carre/panneaux_officiels"]
 
+
+def max_correl(img, motif, s, f):
+    w, h = img.size
+    imgR = img.resize((s, int(s*h/w)))
+    motifR = motif.resize((int(s*f), int(s*f)))
+    correl = cv2.matchTemplate(np.array(imgR), np.array(motifR), cv2.TM_CCORR_NORMED)
+    x, y = np.unravel_index(np.argmax(correl, axis=None), correl.shape)
+    c = correl[x, y]
+    return c, (x-0.5+s*f/2)/s*w, (y-0.5+s*f/2)*w/s
+
+def search_f_max(img, motif, s):
+    # f varie entre 1 et 0.3
+    fMax = 1
+    fMin = 0.3
+
+    for _ in range(3):
+        n = 8
+        lF = [(i*fMin + (n-i)*fMax)/n for i in range(n+1)]
+        lC = np.array([max_correl(img, motif, s, f) for f in lF])
+        i = min(6, max(1, np.argmax(lC[:, 0])))
+        fMax = lF[i-1]
+        fMin = lF[i+1]
+    
+    f = (fMax + fMin) / 2
+    c, x, y = lC[i]
+    return x, y, f*img.size[0]
+    print(f, c, x, y)
+
+def get_center_size(img, code, value, s = 16):
+    motif = Image.open(f"panneaux_officiels/{code}_{value}.png").convert("RGB")
+    return search_f_max(img, motif, s)
+
+
+def display(img, x, y, dz, orient=0):
+    plt.clf()
+    plt.imshow(img)
+    plt.plot(x, y, marker="o")
+    plt.plot(x, y, marker="x")
+    plt.plot([x-dz/2, x+dz/2, x+dz/2, x-dz/2, x-dz/2], 
+             [y-dz/2, y-dz/2, y+dz/2, y+dz/2, y-dz/2])
+    plt.waitforbuttonpress()
+
 if __name__ == "__main__":
-    #show_bands(lDir[4])
+    #show_bands(lDir[0])
 
-    img = Image.open("panneaux_officiels/C28.png")
+    for name in get_list_imgs("../DATA_BASE_SIMULEE/C28"):
+        img = Image.open(name).convert("RGB")
+        x, y, dz = get_center_size(img, "C28", None, 100)
+        display(img, x, y, dz)
 
-    imgR = rotateOrient(img, 0)
-
-    plt.imshow(imgR)
-    plt.show()
+    # https://www.geeksforgeeks.org/python-pil-image-transform-method/
