@@ -4,7 +4,6 @@ import numpy as np
 from skimage import transform
 import cv2
 
-detection = Image.open("./C28_detecte.jpg")
 
 """
 print(detection.size)
@@ -27,6 +26,7 @@ plt.show()
 
 """
 
+
 def satureImage(img):
     hsv = img.convert("HSV")
     img2 = Image.new("HSV", hsv.size, (255, 255, 255))
@@ -35,6 +35,7 @@ def satureImage(img):
     imgSat = Image.merge("HSV", (h, s, v))
     return imgSat.convert(img.mode)
 
+
 """
 hsv = detection.convert("HSV").resize((1,1))
 print(detection.mode)
@@ -42,12 +43,15 @@ print(hsv.getpixel((0,0)))
 hsv.putpixel((0,0), (82, 255, 255))
 """
 
+
 import os
+
 
 def has_been_closed(ax):
     fig = ax.figure.canvas.manager
     active_fig_managers = plt._pylab_helpers.Gcf.figs.values()
     return fig not in active_fig_managers
+
 
 def get_list_imgs(path, ext="jpg"):
     return [
@@ -55,6 +59,7 @@ def get_list_imgs(path, ext="jpg"):
         for name in os.listdir(path)
         if name.split(".")[-1] == ext
     ]
+
 
 def show_bands(directory):
     imgs_names = os.listdir(f"../DATA_BASE_SIMULEE/{directory}")
@@ -94,6 +99,7 @@ def show_bands(directory):
             ax_sat.imshow(satureImage(img))
             plt.waitforbuttonpress()
 
+
 def rotateOrient(img, orient):
     tx = 0
     ty = 0
@@ -129,7 +135,8 @@ def max_correl(img, motif, s, f):
     correl = cv2.matchTemplate(np.array(imgR), np.array(motifR), cv2.TM_CCORR_NORMED)
     x, y = np.unravel_index(np.argmax(correl, axis=None), correl.shape)
     c = correl[x, y]
-    return c, (x-0.5+s*f/2)/s*w, (y-0.5+s*f/2)*w/s
+    return c, (x-0.5+s*f/2)*w/s, (y-0.5+s*f/2)*w/s
+
 
 def search_f_max(img, motif, s):
     # f varie entre 1 et 0.3
@@ -163,12 +170,18 @@ def display(img, x, y, dz, orient=0):
              [y-dz/2, y-dz/2, y+dz/2, y+dz/2, y-dz/2])
     plt.waitforbuttonpress()
 
+
 if __name__ == "__main__":
     #show_bands(lDir[0])
 
-    for name in get_list_imgs("../DATA_BASE_SIMULEE/C28"):
+    for name in get_list_imgs("../DATA_BASE_SIMULEE/C28")*0:
         img = Image.open(name).convert("RGB")
         x, y, dz = get_center_size(img, "C28", None, 100)
         display(img, x, y, dz)
 
     # https://www.geeksforgeeks.org/python-pil-image-transform-method/
+
+    img = Image.open("./C28_detecte.jpg")
+    x, y, dz = get_center_size(img, "C28", None, 100)
+    print(img.size, x, y)
+    display(img, x, y, dz)
