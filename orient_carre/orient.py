@@ -183,5 +183,31 @@ if __name__ == "__main__":
 
     img = Image.open("./C28_detecte.jpg")
     x, y, dz = get_center_size(img, "C28", None, 100)
+
     print(img.size, x, y)
-    display(img, x, y, dz)
+    #display(img, x, y, dz)
+
+    panneau = Image.open(f"panneaux_officiels/C28_None.png").convert("RGB")
+
+    print(panneau.size)
+    #plt.clf()
+    n = 4
+    wp, hp = panneau.size
+    wi, hi = img.size
+    fig = plt.figure()
+    axs = fig.subplots(n, n)
+    pts = []
+    for i in range(n):
+        for j in range(n):
+            img_crop = panneau.crop((wp/n*i,hp/n*j,wp/n*(i+1), hp/n*(j+1)))
+            c, x, y = max_correl(img, img_crop, 64, 64*dz/wi/n)
+            pts.append((x, y))
+            axs[j][i].imshow(img_crop)
+            axs[j][i].axis("off")
+    print(pts)
+    plt.waitforbuttonpress()
+
+    plt.clf()
+    plt.imshow(img)
+    plt.plot([x for (x,y) in pts], [y for (x,y) in pts])
+    plt.show()
