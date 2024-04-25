@@ -4,6 +4,8 @@ import numpy as np
 from skimage import transform
 import cv2
 
+from find_motif import find_motif, find_motif_scale, find_motif_speed
+
 
 """
 print(detection.size)

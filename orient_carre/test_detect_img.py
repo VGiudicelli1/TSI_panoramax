@@ -33,5 +33,12 @@ def test_find_motif_speed():
         0
     )
 
+def test_find_motif_scale():
+    img = Image.open("C28_detecte.jpg").convert("RGB")
+    
+    motif = img.crop([0, 0, 20, 20]).resize((10, 10))
+    x, y, dz, corr = find_motif_scale(img, motif)
+    assert dz==20
+
 if __name__ == "__main__":
     pass

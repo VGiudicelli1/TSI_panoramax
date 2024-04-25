@@ -40,28 +40,7 @@ def find_motif_scale(
     l_dz_wh[:,0] = l_dz_rel * img.size[0]
     l_dz_wh[:,1] = l_dz_rel * img.size[0] * motif.size[1] / motif.size[0]
     l_correl = np.array([find_motif_speed(img, motif.resize(dz_w, dz_h), size_img) for (dz_w, dz_h) in l_dz_wh])
-    x = 0
-    y = 0
-    dz = 0
-    corr = 0
+    i_corr_max = np.argmax(l_correl[:, 2])
+    x, y, corr = l_correl[i_corr_max, :]
+    dz = l_dz_wh[i_corr_max, 0]
     return x, y, dz, corr
-
-
-    # f varie entre 1 et 0.3
-    fMax = 1
-    fMin = 0.3
-
-    for _ in range(3):
-        n = 8
-        lF = [(i*fMin + (n-i)*fMax)/n for i in range(n+1)]
-        lC = np.array([max_correl(img, motif, s, f) for f in lF])
-        i = min(6, max(1, np.argmax(lC[:, 0])))
-        fMax = lF[i-1]
-        fMin = lF[i+1]
-    
-    f = (fMax + fMin) / 2
-    c, x, y = lC[i]
-    return x, y, f*img.size[0]
-    print(f, c, x, y)
-
-
