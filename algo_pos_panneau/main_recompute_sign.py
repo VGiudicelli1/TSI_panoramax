@@ -38,7 +38,7 @@ def recompute_sign(id, signs, cropped_signs):
     cs = cropped_signs.loc[cropped_signs.sign_id == id]
 
     # code, valeur: minimum 3 from face
-    codes = [ (code, value) for (value, code) in signs.loc[:, ("value", "code")].values if is_code_face(code)]
+    codes = [ (code, value) for (value, code) in cs.loc[:, ("value", "code")].values if is_code_face(code)]
     if len(codes) < 3:
         return
 
@@ -72,14 +72,14 @@ def save(conn, signs):
         return
     proj_lambert_delta_to_geo(signs)
     values = ", ".join([
-        f"({id}, ST_POINT({lng}, {lat}), {size}, {ori}, {pr}, {code}, {value})"
+        f"({id}, ST_POINT({lng}, {lat}), {size}, {ori}, {pr}, '{code}', '{value}')".replace("'None'", "NULL").replace("'null'", "NULL")
         for (id, lng, lat, size, ori, pr, code, value) in signs.loc[:, ("id", "lng", "lat", "size", "orientation", "precision", "code", "value")].values
     ])
 
     try:
         with conn.cursor() as cur:
             cur.execute(f"""UPDATE sign AS s
-                        SET geom = new_values.geom, size = new_values.size, orientation = new_values.ori
+                        SET geom = new_values.geom, size = new_values.size, orientation = new_values.ori,
                             precision = new_values.pr, code = new_values.code, value = new_values.value
                         FROM ( VALUES {values}) AS new_values (id, geom, size, ori, pr, code, value)
                         WHERE s.id = new_values.id;""")

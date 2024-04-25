@@ -18,7 +18,8 @@ def load(conn):
 	            JOIN cropped_sign AS c ON c.picture_id = p.id
                 WHERE c.x IS NOT NULL 
                     AND c.y IS NOT NULL 
-                    AND c.dz IS NOT NULL 
+                    AND c.dz IS NOT NULL
+                    AND c.dz > 0 -- when dz=0, sdf=inf
                     AND p.width IS NOT NULL 
                     AND p.height IS NOT NULL 
                     AND p.fov IS NOT NULL 
