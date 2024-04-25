@@ -52,9 +52,9 @@ def load(conn):
 
 
 def save_new_panneaux(conn, panneaux):
-    if len(panneaux) == 0:
-        return
     index = panneaux.id.isnull()
+    if not index.any():
+        return
     try:
         with conn.cursor() as cur:
             proj_lambert_delta_to_geo(panneaux)
