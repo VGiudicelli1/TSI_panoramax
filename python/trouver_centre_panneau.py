@@ -11,6 +11,8 @@ Created on Wed Apr  3 13:47:15 2024
 import numpy as np
 import cv2
 import math
+#import plotting
+#import extraction
 import python.plotting as plotting
 import python.extraction as extraction
 import pandas as pd
@@ -266,20 +268,20 @@ def get_center_rectangle(img, contour):
 	"""
 	list_pixels = make_liste_contour(contour)
 	# Getting vertex of the rectangle
-	coord_x_min = min(list_pixels, key=lambda coord: coord[0])
-	coord_x_max = max(list_pixels, key=lambda coord: coord[0])
-	coord_y_min = min(list_pixels, key=lambda coord: coord[1])
-	coord_y_max = max(list_pixels, key=lambda coord: coord[1])
+	top_left = min(list_pixels, key=lambda p: p[0] + p[1])
+	top_right = max(list_pixels, key=lambda p: (p[0], -p[1]))
+	bottom_left = min(list_pixels, key=lambda p: (p[0], -p[1]))
+	bottom_right = max(list_pixels, key=lambda p: p[0] + p[1])
 	
-	x = math.ceil((coord_x_min[0] + coord_x_max[0] + coord_y_min[0] + coord_y_max[0])/4)
-	y = math.ceil((coord_x_min[1] + coord_x_max[1] + coord_y_min[1] + coord_y_max[1])/4)
+	x = math.ceil((top_left[0] + top_right[0] + bottom_left[0] + bottom_right[0])/4)
+	y = math.ceil((top_left[1] + top_right[1] + bottom_left[1] + bottom_right[1])/4)
 	center = (x,y)
 	# Getting the corners
 	corners = []
-	corners.append(coord_x_min)
-	corners.append(coord_x_max)
-	corners.append(coord_y_min)
-	corners.append(coord_y_max)
+	corners.append(top_left)
+	corners.append(top_right)
+	corners.append(bottom_left)
+	corners.append(bottom_right)
 	#plotting.show_image_rectangle(img, corners, center)
 	
 	return center
