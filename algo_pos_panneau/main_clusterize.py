@@ -59,7 +59,7 @@ def save_new_panneaux(conn, panneaux):
         with conn.cursor() as cur:
             proj_lambert_delta_to_geo(panneaux)
             values = ", ".join([
-                f"(ST_POINT({e[0]},{e[1]}), {e[2]}, '{e[3]}', '{e[4]}', {e[5]}, -1)"
+                f"(ST_POINT({e[0]},{e[1]}), {e[2]}, '{e[3]}', '{e[4]}', {e[5]}, -1)".replace("'None'", "NULL")
                 for e in panneaux.loc[index, ("lng", "lat", "size", "code", "value", "orientation")].values
             ])
             cur.execute(f"""

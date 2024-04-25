@@ -72,7 +72,7 @@ def save(conn, signs):
         return
     proj_lambert_delta_to_geo(signs)
     values = ", ".join([
-        f"({id}, ST_POINT({lng}, {lat}), {size}, {ori}, {pr}, {code}, {value})"
+        f"({id}, ST_POINT({lng}, {lat}), {size}, {ori}, {pr}, '{code}', '{value}')".replace("'None'", "NULL")
         for (id, lng, lat, size, ori, pr, code, value) in signs.loc[:, ("id", "lng", "lat", "size", "orientation", "precision", "code", "value")].values
     ])
 
