@@ -35,13 +35,26 @@ def test_find_motif_speed():
         0
     )
 
+def test_arange():
+    np.testing.assert_array_equal(
+        arange(1, 5, 5),
+        [1, 2, 3, 4, 5]
+    )
+
+    np.testing.assert_array_equal(
+        arange(1, 5, 9),
+        [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
+    )
+
 def test_find_motif_scale():
-    return 
+     
     img = Image.open(__path__ + "/C28_detecte.jpg").convert("RGB")
     
     motif = img.crop([0, 0, 20, 20]).resize((10, 10))
-    x, y, dz, corr = find_motif_scale(img, motif)
+    x, y, dz, corr = find_motif_scale(img, motif, dz_rel_min=0.5, dz_rel_max=3, dz_steps=6, rel_from_img=False)
     assert dz==20
 
 if __name__ == "__main__":
-    pass
+    test_arange()
+    test_find_motif_scale()
+    

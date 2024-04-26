@@ -27,19 +27,30 @@ def find_motif_speed(
     )
     return x/scale, y/scale, corr
 
+def arange(mini:float, maxi:float, steps:int=50) -> np.ndarray:
+    return np.array(range(steps))*(maxi-mini)/(steps-1) + mini
+
 def find_motif_scale(
         img: Image.Image, 
         motif: Image.Image, 
         size_img:float|None=None, 
         dz_rel_max:float=1, 
         dz_rel_min:float=0.3, 
-        dz_steps:int=8
+        dz_steps:int=8,
+        rel_from_img:bool=True,
         ) -> tuple[float, float, float, float]:
-    l_dz_rel = np.arange(dz_rel_min, dz_rel_max, dz_steps)
+    l_dz_rel = arange(dz_rel_min, dz_rel_max, dz_steps)
     l_dz_wh = np.zeros((dz_steps, 2))
-    l_dz_wh[:,0] = l_dz_rel * img.size[0]
-    l_dz_wh[:,1] = l_dz_rel * img.size[0] * motif.size[1] / motif.size[0]
-    l_correl = np.array([find_motif_speed(img, motif.resize(dz_w, dz_h), size_img) for (dz_w, dz_h) in l_dz_wh])
+    if rel_from_img:
+        l_dz_wh[:,0] = l_dz_rel * img.size[0]
+        l_dz_wh[:,1] = l_dz_rel * img.size[0] * motif.size[1] / motif.size[0]
+    else:
+        l_dz_wh[:,0] = l_dz_rel * motif.size[0]
+        l_dz_wh[:,1] = l_dz_rel * motif.size[1]
+
+    print(l_dz_wh)
+    print(l_dz_rel)
+    l_correl = np.array([find_motif_speed(img, motif.resize((int(dz_w), int(dz_h))), size_img) for (dz_w, dz_h) in l_dz_wh])
     i_corr_max = np.argmax(l_correl[:, 2])
     x, y, corr = l_correl[i_corr_max, :]
     dz = l_dz_wh[i_corr_max, 0]
