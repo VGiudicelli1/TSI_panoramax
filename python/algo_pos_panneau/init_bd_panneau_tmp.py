@@ -1,4 +1,7 @@
-from database_connect import connect_db, df_to_insert, DatabaseError
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.database_connect import connect_db, df_to_insert, DatabaseError
 import pandas as pd
 
 __path__ = "/".join(__file__.split("/")[:-1])

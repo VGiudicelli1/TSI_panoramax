@@ -1,8 +1,11 @@
-from database_connect import connect_db, DatabaseError
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.database_connect import connect_db, DatabaseError
 import pandas as pd
 from math import pi
 import numpy as np
-from utils import format_angle_deg
+from algo_pos_panneau.utils import format_angle_deg
 """
 compute gisement and sdf
 need:

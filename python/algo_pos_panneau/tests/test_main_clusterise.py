@@ -1,7 +1,10 @@
-from main_clusterize import appareille_list, appareille_panneaux, compute_panneaux, update_detection_fk_id, save_new_panneaux, save_detections, load
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.main_clusterize import appareille_list, appareille_panneaux, compute_panneaux, update_detection_fk_id, save_new_panneaux, save_detections, load
 import pandas as pd
 import numpy as np
-from database_connect import connect_db
+from algo_pos_panneau.database_connect import connect_db
 
 def test_appareille_list():
     l1 = [1, 4, 7, 9]

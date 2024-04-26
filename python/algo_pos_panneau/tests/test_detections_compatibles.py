@@ -1,4 +1,7 @@
-from detections_compatible import are_detections_compatibles, are_orientations_compatibles, are_positions_compatibles, compatible_matrix
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.detections_compatible import are_detections_compatibles, are_orientations_compatibles, are_positions_compatibles, compatible_matrix
 import pandas as pd
 import numpy as np
 

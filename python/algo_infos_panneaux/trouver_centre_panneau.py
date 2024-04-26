@@ -7,14 +7,16 @@ Created on Wed Apr  3 13:47:15 2024
 """
 
 ###### 0 - Imports #####
-
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 import numpy as np
 import cv2
 import math
-#import plotting
-#import extraction
-import python.plotting as plotting
-import python.extraction as extraction
+from algo_infos_panneaux import plotting
+from algo_infos_panneaux import extraction
+#import python.plotting as plotting
+#import python.extraction as extraction
 import pandas as pd
 import os
 from scipy.spatial import ConvexHull

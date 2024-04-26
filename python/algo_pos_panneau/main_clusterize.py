@@ -1,12 +1,14 @@
-from database_connect import connect_db, DatabaseError
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.database_connect import connect_db, DatabaseError
+from algo_pos_panneau.clusterise import clusterise_mat, extract_clusters
+from algo_pos_panneau.detections_compatible import compatible_matrix, are_detections_compatibles
+from algo_pos_panneau.utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo, format_angle_deg
+from algo_pos_panneau.code_panneaux import is_code_face
 import pandas as pd
-from clusterise import clusterise_mat, extract_clusters
-from detections_compatible import compatible_matrix, are_detections_compatibles
-from utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo, format_angle_deg
 import numpy as np
 import math
-from code_panneaux import is_code_face
-
 ## necessite que compute_cropped_measurement soit executé avant
 
 

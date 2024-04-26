@@ -1,9 +1,12 @@
-from database_connect import connect_db, DatabaseError
-from utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo, mean_angles_deg
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.database_connect import connect_db, DatabaseError
+from algo_pos_panneau.utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo, mean_angles_deg
 import pandas as pd
 import numpy as np
 import math
-from code_panneaux import is_code_face
+from algo_pos_panneau.code_panneaux import is_code_face
 
 def load(conn):
     try:

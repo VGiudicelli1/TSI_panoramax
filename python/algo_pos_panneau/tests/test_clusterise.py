@@ -1,4 +1,7 @@
-from clusterise import clusterise_mat, extract_clusters
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.clusterise import clusterise_mat, extract_clusters
 import numpy as np
 
 def test_clusterise():
