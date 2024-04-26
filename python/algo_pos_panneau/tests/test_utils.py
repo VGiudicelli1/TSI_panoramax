@@ -1,4 +1,7 @@
-from utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo, format_angle_deg, mean_angles_deg
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.utils import proj_geo_to_lambert_delta, proj_lambert_delta_to_geo, format_angle_deg, mean_angles_deg
 import pandas as pd
 from pytest import approx
 

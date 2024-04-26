@@ -47,7 +47,7 @@ valueQuery = {
 
 if __name__ == "__main__":
 	# Read the csv file
-	csvPath = "../../data/exif_data.csv"
+	csvPath = "../../useful_data/data_doc/exif_data.csv"
 	data = csv.readCSVFile(csvPath)
 
 	nonTreatedPictures = ""

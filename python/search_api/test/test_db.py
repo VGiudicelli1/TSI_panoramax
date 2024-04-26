@@ -1,4 +1,7 @@
-from python.search_api import database
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from search_api import database
 
 connx = database.getConnection('localhost')
 

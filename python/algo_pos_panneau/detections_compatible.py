@@ -1,4 +1,7 @@
-from code_panneaux import is_code_back, is_code_face, get_code_back
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.code_panneaux import is_code_back, is_code_face, get_code_back
 
 import math, numpy as np
 

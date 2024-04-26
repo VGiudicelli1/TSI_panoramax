@@ -1,4 +1,7 @@
-from main_compute_cropped_measurments import compute
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from algo_pos_panneau.main_compute_cropped_measurments import compute
 import pandas as pd
 from pytest import approx
 

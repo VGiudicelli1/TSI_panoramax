@@ -1,7 +1,10 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 import pandas as pd
 import pytest
 import numpy as np
-from main_recompute_sign import recompute_all_signs
+from algo_pos_panneau.main_recompute_sign import recompute_all_signs
 
 def test_recompute_sign():
     signs = pd.DataFrame([
