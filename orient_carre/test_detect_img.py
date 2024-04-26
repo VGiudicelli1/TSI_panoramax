@@ -2,8 +2,10 @@ from find_motif import *
 import pytest
 import numpy as np
 
+__path__ = "/".join(__file__.split("/")[:-1])
+
 def test_find_motif():
-    img = Image.open("C28_detecte.jpg").convert("RGB")
+    img = Image.open(__path__ + "/C28_detecte.jpg").convert("RGB")
     assert img.size == (112, 160)
     
     motif = img.crop([0, 0, 20, 20])
@@ -15,7 +17,7 @@ def test_find_motif():
     assert (x, y) == (30, 60)
 
 def test_find_motif_speed():
-    img = Image.open("C28_detecte.jpg").convert("RGB")
+    img = Image.open(__path__ + "/C28_detecte.jpg").convert("RGB")
     
     motif = img.crop([0, 0, 20, 20])
     x, y, corr = find_motif_speed(img, motif, 32) # equivalent size of searched motif: 6x6 px
@@ -35,7 +37,7 @@ def test_find_motif_speed():
 
 def test_find_motif_scale():
     return 
-    img = Image.open("C28_detecte.jpg").convert("RGB")
+    img = Image.open(__path__ + "/C28_detecte.jpg").convert("RGB")
     
     motif = img.crop([0, 0, 20, 20]).resize((10, 10))
     x, y, dz, corr = find_motif_scale(img, motif)
