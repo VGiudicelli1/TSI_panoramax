@@ -797,10 +797,10 @@ def area_of_point_cloud(points):
 
 if __name__ == '__main__':
 	# On importe et on lit le CSV
-	dictionnaire_source = "../data/panodico.csv"
+	dictionnaire_source = "../../useful_data/data_doc/panodico.csv"
 	dico = csv_reader(dictionnaire_source)
 	
-	folder = "../DATA_BASE_SIMULEE"
+	folder = "../../useful_data/simulated_data_base"
 	dirs = os.listdir(folder)
 	for category in dirs: # On récupère chaque nom de dossier
 		print("CATEGORY ", category)

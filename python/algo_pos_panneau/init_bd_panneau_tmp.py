@@ -10,8 +10,8 @@ __path__ = "/".join(__file__.split("/")[:-1])
 def init_tests(conn, config):
     assert "test" in config["database"]    # verify that config is for test
     seq_id = "a957f734-e816-4c1d-af36-7f35deea2b78"
-    photo = pd.read_csv(__path__ + "/../data_test/cropped_signs/photo.csv")
-    imagette = pd.read_csv(__path__ + "/../data_test/cropped_signs/imagette.csv").replace({"A0-A":"A00", "A0-B":"A00"})
+    photo = pd.read_csv(__path__ + "/../../useful_data/data_test/cropped_signs/photo.csv")
+    imagette = pd.read_csv(__path__ + "/../../useful_data/data_test/cropped_signs/imagette.csv").replace({"A0-A":"A00", "A0-B":"A00"})
     photo["id_seq"] = seq_id
     photo["width"] = 5760
     photo["height"] = 2880
