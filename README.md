@@ -1,5 +1,10 @@
 # TSI_panoramax
-[![Test](https://github.com/VGiudicelli1/TSI_panoramax/actions/workflows/action.yml/badge.svg)](https://github.com/VGiudicelli1/TSI_panoramax/actions/workflows/action.yml)
+
+|   |   |
+|:---:|:---:|
+| Branch main  | [![Test](https://github.com/VGiudicelli1/TSI_panoramax/actions/workflows/action.yml/badge.svg?branch=main)](https://github.com/VGiudicelli1/TSI_panoramax/actions/workflows/action.yml?query=branch%3Amain)  |
+| Branch dev  | [![Test](https://github.com/VGiudicelli1/TSI_panoramax/actions/workflows/action.yml/badge.svg?branch=dev)](https://github.com/VGiudicelli1/TSI_panoramax/actions/workflows/action.yml?query=branch%3Adev)  |
+| Last commit | [![Test](https://github.com/VGiudicelli1/TSI_panoramax/actions/workflows/action.yml/badge.svg)](https://github.com/VGiudicelli1/TSI_panoramax/actions/workflows/action.yml) |
 ## Project
 
 The project `Panoramax` (https://panoramax.fr) is usualy presented as the OpenSource french version of Google Street View. It is a colaborative database of street georeferenced photographies. Around this main project, `Panneau(rama)x` extracts road signs from this database in order to update the `BD TOPO®` of IGN (https://geoservices.ign.fr/bdtopo).
