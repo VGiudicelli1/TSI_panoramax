@@ -24,6 +24,12 @@ Our objectives are the last part of this project. We try to localize road signs 
 - final project
 - 4 full-time weeks
 
+## Data
+
+To get the data needed to use these scripts, please reach out to [panoramax@panoramax.fr](panoramax@panoramax.fr)
+And extract the zip file in a folder accordingly to the python scripts
+
+SQL dumps of our results can be found [here](./server_postgres/dump)
 ## Main Processes
 [Associating cropped signs with the original images](./python/search_pi/insert-into-database.py)
 
