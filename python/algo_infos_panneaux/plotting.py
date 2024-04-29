@@ -64,3 +64,17 @@ def show_image_rectangle(img, corners, center, title="Image"):
     plt.axis('off')
     plt.legend()
     plt.show()
+
+
+
+def showImg(img, coords, title):
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    
+    nbr = len(coords)
+    
+    for k in range(nbr):
+        plt.scatter(*coords[k], color='green')
+    
+    plt.title(title)
+    plt.axis('off')
+    plt.show()
