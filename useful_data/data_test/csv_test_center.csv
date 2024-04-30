@@ -1,0 +1,4 @@
+id,id_origin,lat,long,x_centre_pano,y_centre_pano
+test_A14.jpg,test_A14_origin.jpg,48.573403,7.71868,659,2529
+test_B14.jpg,test_B14_origin.jpg,48.571408,7.729042,5999,2787
+test_C12.jpg,test_C12_origin.jpg,48.527311,7.694266,4296,2759
