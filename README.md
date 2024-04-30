@@ -31,14 +31,14 @@ And extract the zip file in a folder accordingly to the python scripts
 
 SQL dumps of our results can be found [here](./server_postgres/dump)
 ## Main Processes
-[Associating cropped signs with the original images](./python/search_pi/insert-into-database.py)
+[Associating cropped signs with the original images](./python/search_api/insert-into-database.py)
 
-[Computing center & height of signs](./python/trouver_centre_panneau.py)
+[Computing center & height of signs](./python/algo_infos_panneaux/trouver_centre_panneau.py)
 
 Computing sign positions & removing duplicates : 
- - [Computes additional data](./algo_pos_panneau/main_compute_cropped_measurements.py)
- - [Clusterize](./algo_pos_panneau/main_clusterize.py)
- - [Computing sign position](./algo_pos_panneau/main_recompute_sign.py)
+ - [Computes additional data](./python/algo_pos_panneau/main_compute_cropped_measurements.py)
+ - [Clusterize](./python/algo_pos_panneau/main_clusterize.py)
+ - [Computing sign position](./python/algo_pos_panneau/main_recompute_sign.py)
 
 
 ## Useful links
