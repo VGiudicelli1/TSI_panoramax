@@ -36,7 +36,7 @@ SQL dumps of our results can be found [here](./server_postgres/dump)
 [Computing center & height of signs](./python/algo_infos_panneaux/trouver_centre_panneau.py)
 
 Computing sign positions & removing duplicates : 
- - [Computes additional data](./python/algo_pos_panneau/main_compute_cropped_measurements.py)
+ - [Computes additional data](./python/algo_pos_panneau/main_compute_cropped_measurments.py)
  - [Clusterize](./python/algo_pos_panneau/main_clusterize.py)
  - [Computing sign position](./python/algo_pos_panneau/main_recompute_sign.py)
 
