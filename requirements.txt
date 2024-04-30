@@ -16,6 +16,8 @@ contourpy==1.2.1
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
+exceptiongroup==1.2.1
+    # via pytest
 fonttools==4.51.0
     # via matplotlib
 idna==3.7
@@ -50,15 +52,13 @@ pluggy==0.13.1
     # via pytest
 psycopg2==2.9.9
     # via -r requirements.in
-py==1.11.0
-    # via pytest
 pyexiv2==2.12.0
     # via -r requirements.in
 pyparsing==3.1.2
     # via matplotlib
 pyproj==3.6.1
     # via -r requirements.in
-pytest==6.2.4
+pytest==7.2.0
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via
@@ -72,7 +72,7 @@ scipy==1.13.0
     # via -r requirements.in
 six==1.16.0
     # via python-dateutil
-toml==0.10.2
+tomli==2.0.1
     # via pytest
 tzdata==2024.1
     # via pandas
