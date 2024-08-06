@@ -77,7 +77,7 @@ Computing sign positions & removing duplicates :
 
 ## Dependencies
 - [attrs](https://github.com/python-attrs/attrs) - Version 23.2.0
-- [certifi](https://github.com/certifi/python-certifi) - Version 2024.2.2
+- [certifi](https://github.com/certifi/python-certifi) - Version 2024.2.2 ⚠️
 - [charset-normalizer](https://github.com/Ousret/charset_normalizer) - Version 3.3.2
 - [contourpy](https://github.com/contourpy/contourpy) - Version 1.2.1
 - [cycler](https://github.com/matplotlib/cycler) - Version 0.12.1
@@ -100,10 +100,13 @@ Computing sign positions & removing duplicates :
 - [pytest](https://github.com/pytest-dev/pytest) - Version 6.2.4
 - [python-dateutil](https://github.com/dateutil/dateutil) - Version 2.9.0.post0
 - [pytz](https://github.com/stub42/pytz) - Version 2024.1
-- [requests](https://github.com/psf/requests) - Version 2.31.0
+- [requests](https://github.com/psf/requests) - Version 2.31.0 ⚠️
 - [scipy](https://github.com/scipy/scipy) - Version 1.13.0
 - [six](https://github.com/benjaminp/six) - Version 1.16.0
 - [toml](https://github.com/uiri/toml) - Version 0.10.2
 - [tzdata](https://github.com/python/tzdata) - Version 2024.1
-- [urllib3](https://github.com/urllib3/urllib3) - Version 2.2.1
+- [urllib3](https://github.com/urllib3/urllib3) - Version 2.2.1 ⚠️
 
+## Security
+
+Before to reuse this project, see [dependabot security alerts](https://github.com/VGiudicelli1/TSI_panoramax/security/dependabot)
